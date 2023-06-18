@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import dashboard_data_collector as ddc
 
 # ===== App Layout =====
 
@@ -76,7 +77,7 @@ app.layout = html.Div([
                 dbc.Col([
                     # List of over speed vehicles
                     html.Div([
-                        html.H3("🚨 Lista de veículos acima da velocidade", className="bold title"),
+                        html.H3("🚨 Lista de veículos acima da velocidade", className="bold title_table"),
                         html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
                     ], className="info"),
 
@@ -104,7 +105,7 @@ app.layout = html.Div([
                 dbc.Col([
                     # List of vehicles at risk of collision
                     html.Div([
-                        html.H3("🚧 Lista de veículos em risco de colisão", className="bold title"),
+                        html.H3("🚧 Lista de veículos em risco de colisão", className="bold title_table"),
                         html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
                     ], className="info"),
 
@@ -125,11 +126,119 @@ app.layout = html.Div([
                             }
                         ]
                     )
-
                 ])
+            ]),
 
-                
+            dbc.Row([
+                # Lista de carros proibidos de circular.
+                dbc.Col([
+                    html.Div([
+                        html.H3("🚫 Lista de carros proibidos de circular", className="bold title_table"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    ], className="info"),
+
+                    # Table
+                    dash_table.DataTable(
+                        id='table_prohibited_cars',
+                        columns=[{"name": i, "id": i} for i in ['Placa']],
+                        data=[],
+                        style_cell={'textAlign': 'center'},
+                        style_header={
+                            'backgroundColor': 'white',
+                            'fontWeight': 'bold'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': 'rgb(248, 248, 248)'
+                            }
+                        ]
+                    )
+                ]),
+
+                # Lista de carros com direção perigosa
+                dbc.Col([
+                    html.Div([
+                        html.H3("🚗 Lista de carros com direção perigosa", className="bold title_table"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    ], className="info"),
+
+                    # Table
+                    dash_table.DataTable(
+                        id='table_dangerous_driving',
+                        columns=[{"name": i, "id": i} for i in ['Placa']],
+                        data=[],
+                        style_cell={'textAlign': 'center'},
+                        style_header={
+                            'backgroundColor': 'white',
+                            'fontWeight': 'bold'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': 'rgb(248, 248, 248)'
+                            }
+                        ]
+                    )
+                ])
+            ]),
+
+            dbc.Row([
+                # Ranking dos TOP 100 veículos que passaram por mais rodovias.
+                dbc.Col([
+                    html.Div([
+                        html.H3("🛣️ Ranking dos top 100 veículos", className="bold title_table"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    ], className="info"),
+
+                    # Table
+                    dash_table.DataTable(
+                        id='table_ranking',
+                        columns=[{"name": i, "id": i} for i in ['Placa', 'Número de rodovias']], # não precisa ter esse número de rodivia, a posição no ranking jé é suficiente
+                        data=[],
+                        style_cell={'textAlign': 'center'},
+                        style_header={
+                            'backgroundColor': 'white',
+                            'fontWeight': 'bold'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': 'rgb(248, 248, 248)'
+                            }
+                        ]
+                    )
+                ]),
+            ]),
+
+            dbc.Row([
+                # Tabela com estatísticas de cada rodovia
+                dbc.Col([
+                    html.Div([
+                        html.H3("📊 Tabela com estatísticas de cada rodovia", className="bold title_table"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    ], className="info"),
+
+                    # Table
+                    dash_table.DataTable(
+                        id='table_statistics',
+                        columns=[{"name": i, "id": i} for i in ['Rodovia', 'Velocidade média dos carros', 'Tempo médio de atravassagem', 'Número de acidentes']],
+                        data=[],
+                        style_cell={'textAlign': 'center'},
+                        style_header={
+                            'backgroundColor': 'white',
+                            'fontWeight': 'bold'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': 'rgb(248, 248, 248)'
+                            }
+                        ]
+                    )
+                ])
             ])
+
         ])
     ])
 ])
