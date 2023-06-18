@@ -25,40 +25,110 @@ app.layout = html.Div([
             dbc.Col([
                 # Number of roads
                 html.Div([
-                    html.H3("🛣️ Número de rodovias: 0", className="bold title"),
-                    html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    html.H3("🛣️ Número de rodovias: ", className="infoText"),
+                    html.H3("0", className="infoText", id="numRoads"),
+                    html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                 ], className="info"),
 
                 # Number of cars
                 html.Div([
-                    html.H3("🚗 Número de carros: 0", className="bold title"),
-                    html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    html.H3("🚗 Número de carros: ", className="infoText"),
+                    html.H3("0", className="infoText", id="numCars"),
+                    html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                 ], className="info"),
 
                 # Number of over speed
                 html.Div([
-                    html.H3("🚨 Acima da velocidade: 0", className="bold title"),
-                    html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    html.H3("🚨 Acima da velocidade: ", className="infoText"),
+                    html.H3("0", className="infoText", id="numOverSpeed"),
+                    html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                 ], className="info"),
 
                 # Number of collisions risk
                 html.Div([
-                    html.H3("🚧 Risco de colisão: 0", className="bold title"),
-                    html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    html.H3("🚧 Risco de colisão: ", className="infoText"),
+                    html.H3("0", className="infoText", id="numCollisionsRisk"),
+                    html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                 ], className="info"),
             ]),
             # Body - Graph
             dbc.Col([
+                dcc.Graph(
+                    id='graph',
+                    figure=px.line({
+                        'time': [0, 1, 2, 3, 4, 5],
+                        'cars': [75, 92, 95, 90, 102, 120],
+                        'overSpeed': [10, 12, 15, 20, 11, 5],
+                        'collisionsRisk': [0, 1, 2, 0, 2, 0]
+                    },
+                    x='time',
+                    y=['cars', 'overSpeed', 'collisionsRisk'],
+                    title='📈 Número de carros, acima da velocidade e em risco de colisão'
+                    )
+                )
             ])
         ]),
         # Body - Tables
         html.Div([
-            html.H3("📄 Tabelas", className="text-center bold title page-title"),
+            html.H3("📄 Tabelas", className="text-center bold title pageTitle"),
             dbc.Row([
                 # Body - Tables, Col 1
-                dbc.Col([]),
+                dbc.Col([
+                    # List of over speed vehicles
+                    html.Div([
+                        html.H3("🚨 Lista de veículos acima da velocidade", className="bold title"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    ], className="info"),
+
+                    # Table
+                    dash_table.DataTable(
+                        id='table_over_speed',
+                        columns=[{"name": i, "id": i} for i in ['Placa', 'Velocidade', 'Risco de colisão']],
+                        data=[],
+                        style_cell={'textAlign': 'center'},
+                        style_header={
+                            'backgroundColor': 'white',
+                            'fontWeight': 'bold'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': 'rgb(248, 248, 248)'
+                            }
+                        ]
+                    )
+
+                ]),
+
                 # Body - Tables, Col 2
-                dbc.Col([])
+                dbc.Col([
+                    # List of vehicles at risk of collision
+                    html.Div([
+                        html.H3("🚧 Lista de veículos em risco de colisão", className="bold title"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                    ], className="info"),
+
+                    # Table
+                    dash_table.DataTable(
+                        id='table_collisions_risk',
+                        columns=[{"name": i, "id": i} for i in ['Placa', 'Velocidade']],
+                        data=[],
+                        style_cell={'textAlign': 'center'},
+                        style_header={
+                            'backgroundColor': 'white',
+                            'fontWeight': 'bold'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': 'rgb(248, 248, 248)'
+                            }
+                        ]
+                    )
+
+                ])
+
+                
             ])
         ])
     ])
