@@ -103,6 +103,7 @@ def get_general_graph():
                                         label="5min",
                                         step="minute",
                                         stepmode="backward"),
+                                    dict(step="all")
                                 ])
                             ),
                             rangeslider=dict(
@@ -123,7 +124,7 @@ def get_general_graph():
     return fig
 
 # ===== Main =====
-def main():
+if __name__ == "__main__":
     """
     For testing purposes.
     """
