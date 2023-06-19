@@ -8,4 +8,4 @@ import redis
 r = redis.Redis(host="localhost", port=6379, db=0, password="")
 
 while True:
-    print(r.xread({'veiculo': "$"}, count=1, block=50000))
+    print(r.xread({"veiculo": '$'}, count=1, block=50000))

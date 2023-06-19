@@ -7,7 +7,7 @@ from faker import Faker
 from faker_vehicle import VehicleProvider
 
 
-fake = Faker()
+fake = Faker("pt_BR")
 fake.add_provider(VehicleProvider)
 
 r = redis.Redis(host="localhost", port=6379, db=0, password="")
