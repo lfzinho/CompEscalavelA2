@@ -82,9 +82,9 @@ def get_general_graph():
                                 name="Collisions risk"))
     
     # Edit the layout
-    fig.update_layout(title='General data',
-                        xaxis_title='Time',
-                        yaxis_title='Number of cars',
+    fig.update_layout(title='<b>📈 Dados Gerais</b>',
+                        xaxis_title='Tempo',
+                        yaxis_title='Número de ocorrências',
                         # Hover mode
                         hovermode="x",
                         # Range selector
