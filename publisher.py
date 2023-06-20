@@ -10,7 +10,7 @@ from faker_vehicle import VehicleProvider
 fake = Faker("pt_BR")
 fake.add_provider(VehicleProvider)
 
-r = redis.Redis(host="localhost", port=6379, db=0, password="")
+r = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234")
 
 while True:
     # Contém a placa do veículo, a rodovia e a posição do veículo
