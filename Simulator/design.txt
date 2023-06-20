@@ -1,0 +1,26 @@
+WORLD
+- create world
+
+
+ROAD
+
+
+
+CAR
+    init
+        save the road
+        save car parameters
+            the parameters are saved via a template dataclass
+            the dataclass contains:
+                risk
+                speed_min
+                speed_max
+                acceleration_max
+                acceleration_min
+                lane_change_prob
+        save the car variables
+            position (via Position dataclass)
+            speed
+            collided
+        # ideally here we would also create the process and tell it to run
+    
