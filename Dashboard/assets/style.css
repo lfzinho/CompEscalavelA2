@@ -15,6 +15,10 @@ body {
     background-color: #E3E3E3;
 }
 
+.body {
+    padding: 2rem 4rem 6rem 4rem;
+}
+
 .pageTitle {
     padding: 2rem 2rem 1rem 2rem;
 }
@@ -38,7 +42,7 @@ body {
     color: #6E6E6E;
 }
 
-.title_table {
+.titleTable {
     /* Adicionar espaços em cima do titulo */
     margin-top: 4rem;
     font-size: 1.5rem;

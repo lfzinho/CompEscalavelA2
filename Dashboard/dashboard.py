@@ -56,16 +56,7 @@ app.layout = html.Div([
             dbc.Col([
                 dcc.Graph(
                     id='graph',
-                    figure=px.line({
-                        'time': [0, 1, 2, 3, 4, 5],
-                        'cars': [75, 92, 95, 90, 102, 120],
-                        'overSpeed': [10, 12, 15, 20, 11, 5],
-                        'collisionsRisk': [0, 1, 2, 0, 2, 0]
-                    },
-                    x='time',
-                    y=['cars', 'overSpeed', 'collisionsRisk'],
-                    title='📈 Número de carros, acima da velocidade e em risco de colisão'
-                    )
+                    figure= ddc.get_general_graph()
                 )
             ])
         ]),
@@ -77,8 +68,8 @@ app.layout = html.Div([
                 dbc.Col([
                     # List of over speed vehicles
                     html.Div([
-                        html.H3("🚨 Lista de veículos acima da velocidade", className="bold title_table"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                        html.H3("🚨 Lista de veículos acima da velocidade", className="bold titleTable"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                     ], className="info"),
 
                     # Table
@@ -105,8 +96,8 @@ app.layout = html.Div([
                 dbc.Col([
                     # List of vehicles at risk of collision
                     html.Div([
-                        html.H3("🚧 Lista de veículos em risco de colisão", className="bold title_table"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                        html.H3("🚧 Lista de veículos em risco de colisão", className="bold titleTable"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                     ], className="info"),
 
                     # Table
@@ -133,8 +124,8 @@ app.layout = html.Div([
                 # Lista de carros proibidos de circular.
                 dbc.Col([
                     html.Div([
-                        html.H3("🚫 Lista de carros proibidos de circular", className="bold title_table"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                        html.H3("🚫 Lista de carros proibidos de circular", className="bold titleTable"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                     ], className="info"),
 
                     # Table
@@ -159,8 +150,8 @@ app.layout = html.Div([
                 # Lista de carros com direção perigosa
                 dbc.Col([
                     html.Div([
-                        html.H3("🚗 Lista de carros com direção perigosa", className="bold title_table"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                        html.H3("🚗 Lista de carros com direção perigosa", className="bold titleTable"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                     ], className="info"),
 
                     # Table
@@ -187,8 +178,8 @@ app.layout = html.Div([
                 # Ranking dos TOP 100 veículos que passaram por mais rodovias.
                 dbc.Col([
                     html.Div([
-                        html.H3("🛣️ Ranking dos top 100 veículos", className="bold title_table"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                        html.H3("🛣️ Ranking dos top 100 veículos", className="bold titleTable"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                     ], className="info"),
 
                     # Table
@@ -215,14 +206,14 @@ app.layout = html.Div([
                 # Tabela com estatísticas de cada rodovia
                 dbc.Col([
                     html.Div([
-                        html.H3("📊 Tabela com estatísticas de cada rodovia", className="bold title_table"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="update-time"),
+                        html.H3("📊 Tabela com estatísticas de cada rodovia", className="bold titleTable"),
+                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
                     ], className="info"),
 
                     # Table
                     dash_table.DataTable(
                         id='table_statistics',
-                        columns=[{"name": i, "id": i} for i in ['Rodovia', 'Velocidade média dos carros', 'Tempo médio de atravassagem', 'Número de acidentes']],
+                        columns=[{"name": i, "id": i} for i in ['Rodovia', 'Velocidade média dos carros', 'Tempo médio de travessia', 'Número de acidentes']],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
