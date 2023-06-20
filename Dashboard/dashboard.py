@@ -16,9 +16,17 @@ NUMCARS_UPDATE_INTERVAL = 500 # ms
 NUMOVERSPEED_UPDATE_INTERVAL = 100 # ms
 NUMCOLLISIONSRISK_UPDATE_INTERVAL = 50 # ms
 
+NUMLISTOVERSPEED_UPDATE_INTERVAL = 1000 # ms
+NUMLISTCOLLISIONSRISK_UPDATE_INTERVAL = 1000 # ms
+NUMLISTBANNEDCARS_UPDATE_INTERVAL = 1000 # ms
+NUMLISTDANGEROUSCARS_UPDATE_INTERVAL = 1000 # ms
+NUMLISTTOP100_UPDATE_INTERVAL = 1000 # ms
+NUMLISTROADS_UPDATE_INTERVAL = 1000 # ms
+
 # ===== App Layout =====
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], update_title=None)
+
 
 app.layout = html.Div([
     # Header
@@ -114,10 +122,12 @@ app.layout = html.Div([
                     # List of over speed vehicles
                     html.Div([
                         html.H3("🚨 Lista de veículos acima da velocidade", className="bold titleTable"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                        html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                        html.P("312", className="infoTimeUpdate", id="numListSpeedTime"),
+                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.Div(className="space"),
                     ], className="info"),
 
-                    # Table
                     dash_table.DataTable(
                         id='table_over_speed',
                         columns=[{"name": i, "id": i} for i in ['Placa', 'Velocidade', 'Risco de colisão']],
@@ -133,8 +143,11 @@ app.layout = html.Div([
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
                         ]
-                    )
-
+                    ),
+                    dcc.Interval(
+                    id='interval-ListSpeed',
+                    interval=NUMLISTOVERSPEED_UPDATE_INTERVAL,
+                    ),
                 ]),
 
                 # Body - Tables, Col 2
@@ -142,12 +155,15 @@ app.layout = html.Div([
                     # List of vehicles at risk of collision
                     html.Div([
                         html.H3("🚧 Lista de veículos em risco de colisão", className="bold titleTable"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                        html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                        html.P("312", className="infoTimeUpdate", id="numListCollisionsRisk"),
+                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.Div(className="space"),
                     ], className="info"),
 
                     # Table
                     dash_table.DataTable(
-                        id='table_collisions_risk',
+                        id='table_list_collisions_risk',
                         columns=[{"name": i, "id": i} for i in ['Placa', 'Velocidade']],
                         data=[],
                         style_cell={'textAlign': 'center'},
@@ -161,7 +177,12 @@ app.layout = html.Div([
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
                         ]
-                    )
+                    ),
+
+                    dcc.Interval(
+                    id='interval-ListCollisionsRisk',
+                    interval=NUMLISTCOLLISIONSRISK_UPDATE_INTERVAL,
+                    ),
                 ])
             ]),
 
@@ -170,12 +191,15 @@ app.layout = html.Div([
                 dbc.Col([
                     html.Div([
                         html.H3("🚫 Lista de carros proibidos de circular", className="bold titleTable"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                        html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                        html.P("312", className="infoTimeUpdate", id="numListBannedCars"),
+                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.Div(className="space"),
                     ], className="info"),
 
                     # Table
                     dash_table.DataTable(
-                        id='table_prohibited_cars',
+                        id='table_list_banned_cars',
                         columns=[{"name": i, "id": i} for i in ['Placa']],
                         data=[],
                         style_cell={'textAlign': 'center'},
@@ -189,19 +213,27 @@ app.layout = html.Div([
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
                         ]
-                    )
+                    ),
+
+                    dcc.Interval(
+                    id='interval-ListBannedCars',
+                    interval=NUMLISTBANNEDCARS_UPDATE_INTERVAL,
+                    ),
                 ]),
 
                 # Lista de carros com direção perigosa
                 dbc.Col([
                     html.Div([
                         html.H3("🚗 Lista de carros com direção perigosa", className="bold titleTable"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                        html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                        html.P("312", className="infoTimeUpdate", id="numListDangerousCars"),
+                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.Div(className="space"),
                     ], className="info"),
 
                     # Table
                     dash_table.DataTable(
-                        id='table_dangerous_driving',
+                        id='table_list_dangerous_cars',
                         columns=[{"name": i, "id": i} for i in ['Placa']],
                         data=[],
                         style_cell={'textAlign': 'center'},
@@ -215,7 +247,12 @@ app.layout = html.Div([
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
                         ]
-                    )
+                    ),
+
+                    dcc.Interval(
+                    id='interval-ListDangerousCars',
+                    interval=NUMLISTDANGEROUSCARS_UPDATE_INTERVAL,
+                    ),
                 ])
             ]),
 
@@ -224,12 +261,15 @@ app.layout = html.Div([
                 dbc.Col([
                     html.Div([
                         html.H3("🛣️ Ranking dos top 100 veículos", className="bold titleTable"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                        html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                        html.P("312", className="infoTimeUpdate", id="numListTop100"),
+                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.Div(className="space"),
                     ], className="info"),
 
                     # Table
                     dash_table.DataTable(
-                        id='table_ranking',
+                        id='table_list_top_100',
                         columns=[{"name": i, "id": i} for i in ['Placa', 'Número de rodovias']], # não precisa ter esse número de rodivia, a posição no ranking jé é suficiente
                         data=[],
                         style_cell={'textAlign': 'center'},
@@ -243,7 +283,12 @@ app.layout = html.Div([
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
                         ]
-                    )
+                    ),
+                    
+                    dcc.Interval(
+                    id='interval-Top100',
+                    interval=NUMLISTTOP100_UPDATE_INTERVAL,
+                    ),
                 ]),
             ]),
 
@@ -252,12 +297,14 @@ app.layout = html.Div([
                 dbc.Col([
                     html.Div([
                         html.H3("📊 Tabela com estatísticas de cada rodovia", className="bold titleTable"),
-                        html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                        html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                        html.P("312", className="infoTimeUpdate", id="numListRoads"),
+                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.Div(className="space"),
                     ], className="info"),
-
                     # Table
                     dash_table.DataTable(
-                        id='table_statistics',
+                        id='table_list_roads',
                         columns=[{"name": i, "id": i} for i in ['Rodovia', 'Velocidade média dos carros', 'Tempo médio de travessia', 'Número de acidentes']],
                         data=[],
                         style_cell={'textAlign': 'center'},
@@ -271,7 +318,12 @@ app.layout = html.Div([
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
                         ]
-                    )
+                    ),
+
+                    dcc.Interval(
+                    id='interval-Roads',
+                    interval=NUMLISTROADS_UPDATE_INTERVAL,
+                    ),
                 ])
             ])
 
@@ -323,6 +375,62 @@ def update_num_over_speed(n):
     event_time, value = ddc.get_n_collisions_risk()
     return value, round(time.time() - event_time)
 
+@app.callback(
+    [Output('table_over_speed', 'data'),
+    Output('numListSpeedTime', 'children')],
+    [Input('interval-ListSpeed', 'n_intervals')])
+def update_table(n_intervals):
+    event_time, value = ddc.get_list_over_speed()
+    value = value.to_dict('records')
+    return value, round(time.time() - event_time)
+
+@app.callback(
+    [Output('table_list_collisions_risk', 'data'),
+    Output('numListCollisionsRisk', 'children')],
+    [Input('interval-ListCollisionsRisk', 'n_intervals')])
+def update_table(n_intervals):
+    event_time, value = ddc.get_list_collisions_risk()
+    value = value.to_dict('records')
+    return value, round(time.time() - event_time)
+
+
+@app.callback(
+    [Output('table_list_banned_cars', 'data'),
+    Output('numListBannedCars', 'children')],
+    [Input('interval-ListBannedCars', 'n_intervals')])
+def update_table(n_intervals):
+    event_time, value = ddc.get_list_banned_cars()
+    value = value.to_dict('records')
+    return value, round(time.time() - event_time)
+
+@app.callback(
+    [Output('table_list_dangerous_cars', 'data'),
+    Output('numListDangerousCars', 'children')],
+    [Input('interval-ListDangerousCars', 'n_intervals')])
+def update_table(n_intervals):
+    event_time, value = ddc.get_list_dangerous_cars()
+    value = value.to_dict('records')
+    return value, round(time.time() - event_time)
+
+@app.callback(
+    [Output('table_list_top_100', 'data'),
+    Output('numListTop100', 'children')],
+    [Input('interval-Top100', 'n_intervals')])
+def update_table(n_intervals):
+    event_time, value = ddc.get_top_100()
+    value = value.to_dict('records')
+    return value, round(time.time() - event_time)
+
+@app.callback(
+    [Output('table_list_roads', 'data'),
+    Output('numListRoads', 'children')],
+    [Input('interval-Roads', 'n_intervals')])
+def update_table(n_intervals):
+    event_time, value = ddc.get_list_roads()
+    value = value.to_dict('records')
+    return value, round(time.time() - event_time)
+
+
 # ===== Main =====
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=8051)
