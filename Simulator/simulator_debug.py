@@ -8,7 +8,7 @@ import redis
 
 class Publisher:
     def __init__(self):
-        self.redis = redis.Redis(host="10.22.224.145", port=6381, db=0, password="1234")
+        self.redis = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234")
     def send_message(self, message_name, message_content):
         self.redis.xadd(message_name, message_content)
 
@@ -270,7 +270,7 @@ class Car:
             "road": self.road.name,
         }
         self.publisher.send_message("veiculo", message)
-        print(f"Road: {self.road.name} Plate: {self.plate_counter} Pos:{self.pos}")
+        print(f"Road: {self.road.name} Plate: {self.plate} Pos:{self.pos}")
     
     def collide(self):
         self.collided = True
@@ -399,10 +399,10 @@ class Road:
         ----""")
 
     def cycle(self):
-        time.sleep(1)
+        time.sleep(0.0001)
         plate = 0
-        while True:
-        # for i in range(1):
+        # while True:
+        for i in range(1):
             #mark
             for lane in range(self.lanes_total):
                 # if random.random() < self.car_spawn_prob and plate<2:
@@ -421,8 +421,9 @@ class Road:
                     break
     
     def delete_car(self, car_pos):
-        self.road[car_pos[0]][car_pos[1]].cycle_flag = False
-        self.road[car_pos[0]][car_pos[1]] = None
+        if self.road[car_pos[0]][car_pos[1]] is not None:
+            self.road[car_pos[0]][car_pos[1]].cycle_flag = False
+            self.road[car_pos[0]][car_pos[1]] = None
         
 
 
@@ -464,13 +465,13 @@ class World:
                 self.create_road(attr)
     
     def create_processes(self):
-        # while True:
-        #     for road in self.roads:
-        #         road.cycle()
-        for road in self.roads:
-            # process = multiprocessing.Process(target=road.process_print)
-            process = multiprocessing.Process(target=road.cycle)
-            self.processes[road.name] =  process
+        while True:
+            for road in self.roads:
+                road.cycle()
+        # for road in self.roads:
+        #     # process = multiprocessing.Process(target=road.process_print)
+        #     process = multiprocessing.Process(target=road.cycle)
+        #     self.processes[road.name] =  process
 
 
     def start_processes(self):
