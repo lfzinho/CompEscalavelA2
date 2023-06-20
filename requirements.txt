@@ -1,0 +1,6 @@
+numpy
+pandas
+redis
+plotly
+faker
+faker-vehicle
