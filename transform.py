@@ -1,6 +1,6 @@
 import redis
 
-r = redis.Redis(host="localhost", port=6379, db=0, password="")
+r = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234")
 
 def extract_speed_and_acceleration(message):
     try:
@@ -28,7 +28,7 @@ def calculate_acceleration(veiculo_posicao):
 while True:
     stream_messages = r.xread({"veiculo": '$'}, count=1, block=50000)
     for _, message in stream_messages:
-        #print(message[0][1][b"veiculo_placa"])
         veiculo_placa, speed, acceleration = extract_speed_and_acceleration(message[0][1])
         if veiculo_placa is not None:
             print(f"Vehicle: {veiculo_placa}, Speed: {speed} km/h, Acceleration: {acceleration} m/s^2")
+            print(f"Position: {message[0][1][b'veiculo_posicao']}")

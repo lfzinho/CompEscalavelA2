@@ -5,7 +5,7 @@
 
 import redis
 
-r = redis.Redis(host="localhost", port=6379, db=0, password="")
+r = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234")
 
 while True:
     print(r.xread({"veiculo": '$'}, count=1, block=50000))
