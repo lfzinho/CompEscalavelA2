@@ -6,7 +6,6 @@ import redis
 from faker import Faker
 from faker_vehicle import VehicleProvider
 
-
 fake = Faker("pt_BR")
 fake.add_provider(VehicleProvider)
 
@@ -21,4 +20,5 @@ while True:
     }
     print(output)
     print(r.xadd("veiculo", output))
+    # add stream into a database
     time.sleep(random.randint(1, 10))
