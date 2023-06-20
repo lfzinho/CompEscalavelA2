@@ -1,66 +1,82 @@
 import plotly.express as px
 import plotly.graph_objects as go
+import redis
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ===== Constants =====
 DEBUG = True
-HIST_LIMIT = 50
+HIST_LIMIT = 2048
 
 # ===== Data =====
 hist_n_cars = []
 hist_n_over_speed = []
 hist_n_collisions_risk = []
 
+# ===== Redis =====
+r = redis.Redis(host='localhost', port=6379, db=0)
+
 # ===== Getters =====
 def update_hist(hist: list, time: int, new_val: int):
     """
     Updates the given list with the new value, removing the oldest value if the list is too long.
     """
+    # If the last value is the same as the new one, don't update
+    if len(hist) > 0 and hist[-1][0] == time:
+        return
+    # If the list is too long, remove the oldest value
     if len(hist) >= HIST_LIMIT:
         hist.pop(0)
+    # Add the new value
     hist.append((time, new_val))
 
 def get_n_roads():
     result = 0
-    delay = 0
+    time_event = 0
     if DEBUG:
         result = random.randint(0, 20)
-        now = time.time()
+        time_event = time.time()
     else:
-        result = ... # TODO
-    return (time, now)
+        result = r.get('n_roads')
+        time_event = r.get('time_n_roads')
+    return (time_event, result)
 
 def get_n_cars():
     result = 0
+    time_event = 0
     if DEBUG:
         result = random.randint(0, 200)
-        now = time.time()
+        time_event = time.time()
     else:
-        result = ... # TODO
-    update_hist(hist_n_cars, now, result)
-    return (now, result)
+        result = r.get('n_cars')
+        time_event = r.get('time_n_cars')
+    update_hist(hist_n_cars, time_event, result)
+    return (time_event, result)
 
 def get_n_over_speed():
     result = 0
+    time_event = 0
     if DEBUG:
         result = random.randint(0, 20)
-        now = time.time()
+        time_event = time.time()
     else:
-        result = ... # TODO
-    update_hist(hist_n_over_speed, now, result)
-    return result
+        result = r.get('n_over_speed')
+        time_event = r.get('time_n_over_speed')
+    update_hist(hist_n_over_speed, time_event, result)
+    return (time_event, result)
 
 def get_n_collisions_risk():
     result = 0
+    time_event = 0
     if DEBUG:
         result = random.randint(0, 20)
-        now = time.time()
+        time_event = time.time()
     else:
-        result = ... # TODO
-    update_hist(hist_n_collisions_risk, now, result)
-    return result
+        result = r.get('n_collisions_risk')
+        time_event = r.get('time_n_collisions_risk')
+    update_hist(hist_n_collisions_risk, time_event, result)
+    return (time_event, result)
 
 # ===== Graphs =====
 
@@ -111,7 +127,9 @@ def get_general_graph():
                             ),
                             type="date",
                             # Tick format
-                            tickformat="%H:%M:%S"
+                            tickformat="%H:%M:%S",
+                            # Range to five minutes
+                            range = [datetime.now() - timedelta(seconds=10), datetime.now()]
                         ),
                         # Background
                         paper_bgcolor='rgba(0,0,0,0)',

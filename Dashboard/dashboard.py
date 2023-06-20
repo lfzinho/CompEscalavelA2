@@ -6,6 +6,15 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import dashboard_data_collector as ddc
+import time
+
+# ===== Constants =====
+DEBUG = True
+GRAPH_UPDATE_INTERVAL = 1000 # ms
+NUMROADS_UPDATE_INTERVAL = 1000 # ms
+NUMCARS_UPDATE_INTERVAL = 500 # ms
+NUMOVERSPEED_UPDATE_INTERVAL = 100 # ms
+NUMCOLLISIONSRISK_UPDATE_INTERVAL = 50 # ms
 
 # ===== App Layout =====
 
@@ -28,28 +37,60 @@ app.layout = html.Div([
                 html.Div([
                     html.H3("🛣️ Número de rodovias: ", className="infoText"),
                     html.H3("0", className="infoText", id="numRoads"),
-                    html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                    dcc.Interval(
+                        id='numRoads-update-interval',
+                        interval=NUMROADS_UPDATE_INTERVAL
+                    ),
+                    html.Br(),
+                    html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                    html.P("312", className="infoTimeUpdate", id="numRoadsTime"),
+                    html.P("ms atrás", className="infoTimeUpdate"),
+                    html.Div(className="space"),
                 ], className="info"),
 
                 # Number of cars
                 html.Div([
                     html.H3("🚗 Número de carros: ", className="infoText"),
                     html.H3("0", className="infoText", id="numCars"),
-                    html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                    dcc.Interval(
+                        id='numCars-update-interval',
+                        interval=NUMCARS_UPDATE_INTERVAL
+                    ),
+                    html.Br(),
+                    html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                    html.P("312", className="infoTimeUpdate", id="numCarsTime"),
+                    html.P("ms atrás", className="infoTimeUpdate"),
+                    html.Div(className="space"),
                 ], className="info"),
 
                 # Number of over speed
                 html.Div([
                     html.H3("🚨 Acima da velocidade: ", className="infoText"),
                     html.H3("0", className="infoText", id="numOverSpeed"),
-                    html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                    dcc.Interval(
+                        id='numOverSpeed-update-interval',
+                        interval=NUMOVERSPEED_UPDATE_INTERVAL
+                    ),
+                    html.Br(),
+                    html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                    html.P("312", className="infoTimeUpdate", id="numOverSpeedTime"),
+                    html.P("ms atrás", className="infoTimeUpdate"),
+                    html.Div(className="space"),
                 ], className="info"),
 
                 # Number of collisions risk
                 html.Div([
                     html.H3("🚧 Risco de colisão: ", className="infoText"),
                     html.H3("0", className="infoText", id="numCollisionsRisk"),
-                    html.P("⏱️ Atualizado a 312ms atrás", className="infoTimeUpdate"),
+                    dcc.Interval(
+                        id='numCollisionsRisk-update-interval',
+                        interval=NUMCOLLISIONSRISK_UPDATE_INTERVAL
+                    ),
+                    html.Br(),
+                    html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
+                    html.P("312", className="infoTimeUpdate", id="numCollisionsRiskTime"),
+                    html.P("ms atrás", className="infoTimeUpdate"),
+                    html.Div(className="space"),
                 ], className="info"),
             ]),
             # Body - Graph
@@ -57,6 +98,10 @@ app.layout = html.Div([
                 dcc.Graph(
                     id='graph',
                     figure= ddc.get_general_graph()
+                ),
+                dcc.Interval(
+                    id='graph-update-interval',
+                    interval=GRAPH_UPDATE_INTERVAL
                 )
             ])
         ]),
@@ -233,6 +278,50 @@ app.layout = html.Div([
         ])
     ])
 ])
+
+# ===== Callbacks =====
+# Callbacks - Graph
+@app.callback(
+    Output('graph', 'figure'),
+    [Input('graph-update-interval', 'n_intervals')])
+def update_graph(n):
+    return ddc.get_general_graph()
+
+# Callbacks - Num Roads
+@app.callback(
+    [Output('numRoads', 'children'),
+     Output('numRoadsTime', 'children')],
+    [Input('numRoads-update-interval', 'n_intervals')])
+def update_num_roads(n):
+    event_time, value = ddc.get_n_roads()
+    return value, round(time.time() - event_time)
+
+# Callbacks - Num Cars
+@app.callback(
+    [Output('numCars', 'children'),
+     Output('numCarsTime', 'children')],
+    [Input('numCars-update-interval', 'n_intervals')])
+def update_num_cars(n):
+    event_time, value = ddc.get_n_cars()
+    return value, round(time.time() - event_time)
+
+# Callbacks - Num Over Speed
+@app.callback(
+    [Output('numOverSpeed', 'children'),
+     Output('numOverSpeedTime', 'children')],
+    [Input('numOverSpeed-update-interval', 'n_intervals')])
+def update_num_over_speed(n):
+    event_time, value = ddc.get_n_over_speed()
+    return value, round(time.time() - event_time)
+
+# Callbacks - Num 
+@app.callback(
+    [Output('numCollisionsRisk', 'children'),
+     Output('numCollisionsRiskTime', 'children')],
+    [Input('numCollisionsRisk-update-interval', 'n_intervals')])
+def update_num_over_speed(n):
+    event_time, value = ddc.get_n_collisions_risk()
+    return value, round(time.time() - event_time)
 
 # ===== Main =====
 if __name__ == '__main__':

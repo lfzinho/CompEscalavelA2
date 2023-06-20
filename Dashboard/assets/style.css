@@ -40,6 +40,11 @@ body {
 .infoTimeUpdate {
     font-style: italic;
     color: #6E6E6E;
+    display: inline;
+}
+
+.space {
+    margin-top: 2rem;
 }
 
 .titleTable {

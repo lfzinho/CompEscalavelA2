@@ -1,6 +1,9 @@
 import redis
 
-r = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234")
+
+# FORNARO
+
+r = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234", decode_responses=True)
 
 def extract_speed_and_acceleration(message):
     try:
@@ -27,6 +30,8 @@ def calculate_acceleration(veiculo_posicao):
 
 while True:
     stream_messages = r.xread({"veiculo": '$'}, count=1, block=50000)
+    print(r.set("bike:1",str(stream_messages)))
+    print(stream_messages)
     for _, message in stream_messages:
         veiculo_placa, speed, acceleration = extract_speed_and_acceleration(message[0][1])
         if veiculo_placa is not None:
