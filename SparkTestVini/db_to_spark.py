@@ -68,7 +68,7 @@ class Transformer:
 
     def add_analysis2(self):
         # n veiculos
-        pass
+        self.distinct_road_names_count = self.df.select("car_plate").distinct().count()
 
     def add_analysis3(self):
         # n veiculos risco colisao
