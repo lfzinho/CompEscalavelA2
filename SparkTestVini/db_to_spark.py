@@ -19,7 +19,7 @@ class Transformer:
         # Get roads' data
         self.roads_data = self.spark.read.csv('./Simulator/world.txt', sep=" ", header=False)
         self.dashboard_db = redis.Redis(
-            host='192.168.0.79',
+            host='192.168.0.59',
             port=6381,
             password='1234',
             db=3,
@@ -29,7 +29,7 @@ class Transformer:
     def read_data_from_redis(self):
         # connects to redis
         redis_client = redis.Redis(
-            host='192.168.0.79',
+            host='192.168.0.59',
             port=6381,
             password='1234',
             db=1,

@@ -9,7 +9,7 @@ import dashboard_data_collector as ddc
 import time
 
 # ===== Constants =====
-DEBUG = True
+DEBUG = False
 GRAPH_UPDATE_INTERVAL = 1000 # ms
 NUMROADS_UPDATE_INTERVAL = 1000 # ms
 NUMCARS_UPDATE_INTERVAL = 500 # ms
@@ -434,4 +434,4 @@ def update_table(n_intervals):
 
 # ===== Main =====
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8051)
+    app.run_server(debug=DEBUG, port=8051)

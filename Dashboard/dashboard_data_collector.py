@@ -9,7 +9,7 @@ from io import StringIO
 import string 
 
 # ===== Constants =====
-DEBUG = True
+DEBUG = False
 HIST_LIMIT = 2048
 
 # ===== Data =====
@@ -19,7 +19,7 @@ hist_n_collisions_risk = []
 
 # ===== Redis =====
 r = redis.Redis(
-    host='192.168.0.79',
+    host='192.168.0.59',
     port=6381,
     password='1234',
     db=3,
