@@ -2,8 +2,8 @@ import os
 import sys
 import redis
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split
-from pyspark.sql.functions import count
+from pyspark.sql.functions import split, count, lit, lag
+from pyspark.sql.window import Window
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
@@ -16,6 +16,14 @@ class Transformer:
             .appName("RedisSparkIntegration") \
             .getOrCreate()
         
+        self.dashboard_db = redis.Redis(
+            host='192.168.0.79',
+            port=6381,
+            password='1234',
+            db=3,
+            decode_responses = True,
+        )
+        self.car_registry = {}
     
     def read_data_from_redis(self):
         # connects to redis
@@ -44,15 +52,51 @@ class Transformer:
         # create a spark dataframe with coumns key and value
         self.df = self.spark.createDataFrame(data, ["key", "value"])
 
-        # now splits the columns key into time and plate and laue into road, lane and length
-        self.df = self.df.withColumn('time', split(self.df['key'], ' ').getItem(0)) \
-            .withColumn('car_plate', split(self.df['key'], ' ').getItem(1)) \
-            .withColumn('road_name', split(self.df['value'], ' ').getItem(0)) \
-            .withColumn('car_lane', split(self.df['value'], ' ').getItem(1)) \
-            .withColumn('car_length', split(self.df['value'], ' ').getItem(2))
+        # splits the columns key into time and plate and laue into road, lane and length
+        # ! CHANGE THIS ONCE THE DATA IS UPDATED !
+        time = split(self.df['key'], ' ').getItem(0).cast('float')
+        plate = split(self.df['key'], ' ').getItem(1)
+        road = split(self.df['value'], ' ').getItem(0)
+        lane = split(self.df['value'], ' ').getItem(1).cast('int')
+        length = split(self.df['value'], ' ').getItem(2).cast('int')
+
+        self.df = self.df.withColumn('time', time) \
+            .withColumn('car_plate', plate) \
+            .withColumn('road_name', road) \
+            .withColumn('car_lane', lane) \
+            .withColumn('car_length', length) \
+            .drop('key') \
+            .drop('value')
+        
+        self.base_transform()
 
     def base_transform(self):
-        pass
+        # Gets all the cars
+        windowSpec = Window.partitionBy("car_plate").orderBy("time")
+
+        # Uses lag to get the previous time, length and lane
+        self.df = self.df.withColumn("prev_time", lag("time", 1).over(windowSpec))
+        self.df = self.df.withColumn("prev_length", lag("car_length", 1).over(windowSpec))
+        self.df = self.df.withColumn("prev_lane", lag("car_lane", 1).over(windowSpec))
+        # Uses lag to get previous previous time and length
+        self.df = self.df.withColumn("prev_prev_time", lag("time", 2).over(windowSpec))
+        self.df = self.df.withColumn("prev_prev_length", lag("car_length", 2).over(windowSpec))
+
+        # Calculates the speed
+        speeds = self.df.withColumn("speed", (self.df["car_length"] - self.df["prev_length"]) / (self.df["time"] - self.df["prev_time"] + 0.1))
+        speeds = speeds.select("car_plate", "time", "speed")
+
+        # Calculates the acceleration
+        accs = self.df.withColumn("acceleration", (self.df["car_length"] - 2 * self.df["prev_length"] + self.df["prev_prev_length"]) / ((self.df["time"] - self.df["prev_time"] + 0.1) * (self.df["time"] - self.df["prev_time"] + 0.1)))
+        accs = accs.select("car_plate", "time", "acceleration")
+
+        # Calculates the change of lane
+        lane_changes = self.df.withColumn("lane_change", (self.df["car_lane"] == self.df["prev_lane"]))
+        lane_changes = lane_changes.select("car_plate", "time", "lane_change")
+        
+        # Joins the dataframes and save it to class variable
+        self.df_base = speeds.join(accs, "time", "outer") \
+            .join(lane_changes, "time", "outer")
 
     def individual_analysis(self):
         self.add_analysis1()
@@ -65,10 +109,13 @@ class Transformer:
     def add_analysis1(self):
         # n rodovias
         self.distinct_road_names_count = self.df.select("road_name").distinct().count()
+        self.dashboard_db.set("n_roads", self.distinct_road_names_count)
 
     def add_analysis2(self):
         # n veiculos
-        self.distinct_road_names_count = self.df.select("car_plate").distinct().count()
+        self.distinct_car_names = self.df.select("car_plate").distinct()
+        self.distinct_car_names_count = self.distinct_car_names.count()
+        self.dashboard_db.set("n_cars", self.distinct_car_names_count)
 
     def add_analysis3(self):
         # n veiculos risco colisao
@@ -117,3 +164,4 @@ class Transformer:
 t = Transformer()
 t.get_df()
 t.individual_analysis()
+t.base_transform()

@@ -18,7 +18,13 @@ hist_n_over_speed = []
 hist_n_collisions_risk = []
 
 # ===== Redis =====
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(
+    host='192.168.0.79',
+    port=6381,
+    password='1234',
+    db=3,
+    decode_responses = True
+)
 
 # ===== Getters =====
 def update_hist(hist: list, time: int, new_val: int):

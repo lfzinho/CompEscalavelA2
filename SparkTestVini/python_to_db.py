@@ -23,7 +23,7 @@ class Subscriber:
             if self.debug:
                 print(message)
             data = message['data'].split(",")
-            key = f"{data[0]} {data[2]}"
+            key = f"{data[2]}:{data[0]}"
             value = f"{data[1]} {data[3]} {data[4]}"
             self.redis.set(key, value)
             n -= 1
