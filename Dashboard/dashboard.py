@@ -282,7 +282,8 @@ app.layout = html.Div([
                                 'if': {'row_index': 'odd'},
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
-                        ]
+                        ],
+                        page_size= 20
                     ),
                     
                     dcc.Interval(
