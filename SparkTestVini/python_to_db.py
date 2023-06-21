@@ -4,22 +4,32 @@ import redis
 class Subscriber:
 
     def __init__(self):
-        self.debug = True
+        self.debug = False
         self.redis = redis.Redis(
             host='192.168.0.79',
             port=6381,
             password='1234',
-            db=0
+            db=1,
+            decode_responses = True,
         )
+        self.redis.flushdb()
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe("veiculo")
 
-    def listen_and_save(self):
+    def listen_and_save(self, n):
         for message in self.pubsub.listen():
+            if message["type"] != "message":
+                continue
             if self.debug:
                 print(message)
-            self.redis.set("veiculo", message["data"])
+            data = message['data'].split(",")
+            key = f"{data[0]} {data[2]}"
+            value = f"{data[1]} {data[3]} {data[4]}"
+            self.redis.set(key, value)
+            n -= 1
+            if n<=0:
+                break
 
 
 s = Subscriber()
-s.listen_and_save()
+s.listen_and_save(1000)
