@@ -4,6 +4,8 @@ import redis
 import random
 import time
 from datetime import datetime, timedelta
+import pandas as pd
+from io import StringIO
 
 # ===== Constants =====
 DEBUG = True
@@ -78,6 +80,136 @@ def get_n_collisions_risk():
     update_hist(hist_n_collisions_risk, time_event, result)
     return (time_event, result)
 
+
+def get_list_over_speed():
+    result = ""
+    time_event = 0
+    if DEBUG:
+        # Gerando dados aleatórios
+        placas = ['ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456']
+        velocidades = [random.randint(80, 120) for _ in range(len(placas))]
+        riscos_colisao = [random.randint(0, 1) for _ in range(len(placas))]
+
+        # Construindo a string de dados
+        result = "Placa,Velocidade,Risco de colisão\n"
+        for placa, velocidade, risco in zip(placas, velocidades, riscos_colisao):
+            result += f"{placa},{velocidade},{risco}\n"
+
+        result = pd.read_csv(StringIO(result))
+        time_event = time.time()
+    else:
+        result = r.get('list_over_speed')
+        result = pd.read_csv(StringIO(result))
+        time_event = r.get('time_list_over_speed')
+    return (time_event, result)
+
+def get_list_collisions_risk():
+    result = ""
+    time_event = 0
+    if DEBUG:
+        # Gerando dados aleatórios
+        placas = ['ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456']
+        velocidades = [random.randint(80, 120) for _ in range(len(placas))]
+
+        # Construindo a string de dados
+        result = "Placa,Velocidade\n"
+        for placa, velocidade in zip(placas, velocidades):
+            result += f"{placa},{velocidade}\n"
+
+        result = pd.read_csv(StringIO(result))
+        time_event = time.time()
+    else:
+        result = r.get('list_collisions_risk')
+        result = pd.read_csv(StringIO(result))
+        time_event = r.get('time_list_collisions_risk')
+    return (time_event, result)
+
+def get_list_banned_cars():
+    result = ""
+    time_event = 0
+    if DEBUG:
+        # Gerando dados aleatórios
+        placas = ['ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456']
+
+        # Construindo a string de dados
+        result = "Placa\n"
+        for placa in placas:
+            result += f"{placa}\n"
+
+        result = pd.read_csv(StringIO(result))
+        time_event = time.time()
+    else:
+        result = r.get('list_banned_cars')
+        result = pd.read_csv(StringIO(result))
+        time_event = r.get('time_list_banned_cars')
+    return (time_event, result)
+
+
+def get_list_dangerous_cars():
+    result = ""
+    time_event = 0
+    if DEBUG:
+        # Gerando dados aleatórios
+        placas = ['ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456']
+
+        # Construindo a string de dados
+        result = "Placa\n"
+        for placa in placas:
+            result += f"{placa}\n"
+
+        result = pd.read_csv(StringIO(result))
+        time_event = time.time()
+    else:
+        result = r.get('list_dangerous_cars')
+        result = pd.read_csv(StringIO(result))
+        time_event = r.get('time_list_dangerous_cars')
+    return (time_event, result)
+
+def get_top_100():
+    result = ""
+    time_event = 0
+    if DEBUG:
+        # Gerando dados aleatórios
+        placas = ['ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456']
+        n_rodovias = [random.randint(1, 10) for _ in range(len(placas))]
+
+        # Construindo a string de dados
+        result = "Placa,Número de rodovias\n"
+        for placa, n_rodovia in zip(placas, n_rodovias):
+            result += f"{placa},{n_rodovia}\n"
+
+        result = pd.read_csv(StringIO(result))
+        time_event = time.time()
+    else:
+        result = r.get('top_100')
+        result = pd.read_csv(StringIO(result))
+        time_event = r.get('time_top_100')
+    return (time_event, result)
+
+def get_list_roads():
+    result = ""
+    time_event = 0
+    if DEBUG:
+        # Gerando dados aleatórios
+        rodovias = ['BR-101', 'BR-116', 'BR-230', 'BR-232']
+        mean_speeds = [random.randint(80, 120) for _ in range(len(rodovias))]
+        mean_crossing = [random.randint(1, 10) for _ in range(len(rodovias))]
+        accidents = [random.randint(1, 10) for _ in range(len(rodovias))]
+
+        # Construindo a string de dados
+        result = "Rodovia,Velocidade,Travessias,Acidentes\n"
+        for rodovia, mean_speed, mean_cross, accident in zip(rodovias, mean_speeds, mean_crossing, accidents):
+            result += f"{rodovia},{mean_speed},{mean_cross},{accident}\n"
+
+        result = pd.read_csv(StringIO(result))
+        time_event = time.time()
+    else:
+        result = r.get('list_roads')
+        result = pd.read_csv(StringIO(result))
+        time_event = r.get('time_list_roads')
+    return (time_event, result)
+
+
 # ===== Graphs =====
 
 def get_general_graph():
@@ -150,6 +282,12 @@ if __name__ == "__main__":
         get_n_cars()
         get_n_over_speed()
         get_n_collisions_risk()
+        get_list_over_speed()
+        get_list_collisions_risk()
+        get_list_banned_cars()
+        get_list_dangerous_cars()
+        get_top_100()
+        get_list_roads()
         time.sleep(0.001)
         print("generating data...", i, end="\r")
     
