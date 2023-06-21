@@ -73,10 +73,12 @@ class Transformer:
     def add_analysis3(self):
         # n veiculos risco colisao
         pass
+        self.number_of_cars_in_risk_of_collision = self.cars_in_risk_of_collision.count()
 
     def add_analysis4(self):
         # n veiculos acima velocidade limite
         pass
+        self.number_of_cars_above_speed_limit = self.cars_above_speed_limit.count()
 
     def add_analysis5(self):
         # lista veiculos acima limite velocidade
