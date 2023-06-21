@@ -60,7 +60,8 @@ class Car:
         self.road = road
 
         # Car parameters
-        self.plate = ''.join([random.choice(string.ascii_uppercase) for _ in range(3)]) + str(random.randint(0,9)) + random.choice(string.ascii_uppercase) + str(random.randint(0,9)) + str(random.randint(0,9))
+        self.plate = '' + str(random.randint(0,9)) + str(random.randint(0,9)) + str(random.randint(0,9))
+        # self.plate = ''.join([random.choice(string.ascii_uppercase) for _ in range(3)]) + str(random.randint(0,9)) + random.choice(string.ascii_uppercase) + str(random.randint(0,9)) + str(random.randint(0,9))
         self.model = model_from_plate(self.plate)
         self.risk = collision_risk
         self.speed_min = speed_min
