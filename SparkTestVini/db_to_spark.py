@@ -2,7 +2,7 @@ import os
 import sys
 import redis
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, count, lit, lag
+from pyspark.sql.functions import split, count, lit, lag, col, expr
 from pyspark.sql.window import Window
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -22,8 +22,7 @@ class Transformer:
             password='1234',
             db=3,
             decode_responses = True,
-        )
-        self.car_registry = {}
+        )        
     
     def read_data_from_redis(self):
         # connects to redis
@@ -120,18 +119,25 @@ class Transformer:
     def add_analysis3(self):
         # n veiculos risco colisao
         pass
+        self.number_of_cars_in_risk_of_collision = self.cars_in_risk_of_collision.count()
 
     def add_analysis4(self):
         # n veiculos acima velocidade limite
         pass
+        self.number_of_cars_above_speed_limit = self.cars_above_speed_limit.count()
 
     def add_analysis5(self):
         # lista veiculos acima limite velocidade
+        # Get cars above speed limit
         pass
+        joined_df = self.df.join(self.roads_data, self.df["road_name"] == self.roads_data["_c0"], "inner")
+        self.cars_above_speed_limit = joined_df.filter(col("speed") > col("_c4"))
 
     def add_analysis6(self):
         # lista veiculos risco de colisao
         pass
+        joined_df = self.df.join(self.roads_data, self.df["road_name"] == self.roads_data["_c0"], "inner")
+        self.cars_above_speed_limit = joined_df.filter(col("speed") > col("_c4"))
 
     def historical_analysis(self):
         self.add_analysis7()
