@@ -9,7 +9,7 @@ import dashboard_data_collector as ddc
 import time
 
 # ===== Constants =====
-DEBUG = False
+DEBUG = True
 GRAPH_UPDATE_INTERVAL = 1000 # ms
 NUMROADS_UPDATE_INTERVAL = 1000 # ms
 NUMCARS_UPDATE_INTERVAL = 500 # ms
@@ -52,7 +52,7 @@ app.layout = html.Div([
                     html.Br(),
                     html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                     html.P("312", className="infoTimeUpdate", id="numRoadsTime"),
-                    html.P("ms atrás", className="infoTimeUpdate"),
+                    html.P("s atrás", className="infoTimeUpdate"),
                     html.Div(className="space"),
                 ], className="info"),
 
@@ -67,7 +67,7 @@ app.layout = html.Div([
                     html.Br(),
                     html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                     html.P("312", className="infoTimeUpdate", id="numCarsTime"),
-                    html.P("ms atrás", className="infoTimeUpdate"),
+                    html.P("s atrás", className="infoTimeUpdate"),
                     html.Div(className="space"),
                 ], className="info"),
 
@@ -82,7 +82,7 @@ app.layout = html.Div([
                     html.Br(),
                     html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                     html.P("312", className="infoTimeUpdate", id="numOverSpeedTime"),
-                    html.P("ms atrás", className="infoTimeUpdate"),
+                    html.P("s atrás", className="infoTimeUpdate"),
                     html.Div(className="space"),
                 ], className="info"),
 
@@ -97,7 +97,7 @@ app.layout = html.Div([
                     html.Br(),
                     html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                     html.P("312", className="infoTimeUpdate", id="numCollisionsRiskTime"),
-                    html.P("ms atrás", className="infoTimeUpdate"),
+                    html.P("s atrás", className="infoTimeUpdate"),
                     html.Div(className="space"),
                 ], className="info"),
             ]),
@@ -124,7 +124,7 @@ app.layout = html.Div([
                         html.H3("🚨 Lista de veículos acima da velocidade", className="bold titleTable"),
                         html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                         html.P("312", className="infoTimeUpdate", id="numListSpeedTime"),
-                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.P("s atrás", className="infoTimeUpdate"),
                         html.Div(className="space"),
                     ], className="info"),
 
@@ -157,7 +157,7 @@ app.layout = html.Div([
                         html.H3("🚧 Lista de veículos em risco de colisão", className="bold titleTable"),
                         html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                         html.P("312", className="infoTimeUpdate", id="numListCollisionsRisk"),
-                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.P("s atrás", className="infoTimeUpdate"),
                         html.Div(className="space"),
                     ], className="info"),
 
@@ -193,7 +193,7 @@ app.layout = html.Div([
                         html.H3("🚫 Lista de carros proibidos de circular", className="bold titleTable"),
                         html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                         html.P("312", className="infoTimeUpdate", id="numListBannedCars"),
-                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.P("s atrás", className="infoTimeUpdate"),
                         html.Div(className="space"),
                     ], className="info"),
 
@@ -227,7 +227,7 @@ app.layout = html.Div([
                         html.H3("🚗 Lista de carros com direção perigosa", className="bold titleTable"),
                         html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                         html.P("312", className="infoTimeUpdate", id="numListDangerousCars"),
-                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.P("s atrás", className="infoTimeUpdate"),
                         html.Div(className="space"),
                     ], className="info"),
 
@@ -263,7 +263,7 @@ app.layout = html.Div([
                         html.H3("🛣️ Ranking dos top 100 veículos", className="bold titleTable"),
                         html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                         html.P("312", className="infoTimeUpdate", id="numListTop100"),
-                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.P("s atrás", className="infoTimeUpdate"),
                         html.Div(className="space"),
                     ], className="info"),
 
@@ -300,7 +300,7 @@ app.layout = html.Div([
                         html.H3("📊 Tabela com estatísticas de cada rodovia", className="bold titleTable"),
                         html.P("⏱️ Atualizado a ", className="infoTimeUpdate"),
                         html.P("312", className="infoTimeUpdate", id="numListRoads"),
-                        html.P("ms atrás", className="infoTimeUpdate"),
+                        html.P("s atrás", className="infoTimeUpdate"),
                         html.Div(className="space"),
                     ], className="info"),
                     # Table
@@ -347,6 +347,7 @@ def update_graph(n):
     [Input('numRoads-update-interval', 'n_intervals')])
 def update_num_roads(n):
     event_time, value = ddc.get_n_roads()
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 # Callbacks - Num Cars
@@ -356,6 +357,7 @@ def update_num_roads(n):
     [Input('numCars-update-interval', 'n_intervals')])
 def update_num_cars(n):
     event_time, value = ddc.get_n_cars()
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 # Callbacks - Num Over Speed
@@ -365,6 +367,7 @@ def update_num_cars(n):
     [Input('numOverSpeed-update-interval', 'n_intervals')])
 def update_num_over_speed(n):
     event_time, value = ddc.get_n_over_speed()
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 # Callbacks - Num 
@@ -374,6 +377,7 @@ def update_num_over_speed(n):
     [Input('numCollisionsRisk-update-interval', 'n_intervals')])
 def update_num_over_speed(n):
     event_time, value = ddc.get_n_collisions_risk()
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 @app.callback(
@@ -383,6 +387,7 @@ def update_num_over_speed(n):
 def update_table(n_intervals):
     event_time, value = ddc.get_list_over_speed()
     value = value.to_dict('records')
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 @app.callback(
@@ -392,6 +397,7 @@ def update_table(n_intervals):
 def update_table(n_intervals):
     event_time, value = ddc.get_list_collisions_risk()
     value = value.to_dict('records')
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 
@@ -402,6 +408,7 @@ def update_table(n_intervals):
 def update_table(n_intervals):
     event_time, value = ddc.get_list_banned_cars()
     value = value.to_dict('records')
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 @app.callback(
@@ -411,6 +418,7 @@ def update_table(n_intervals):
 def update_table(n_intervals):
     event_time, value = ddc.get_list_dangerous_cars()
     value = value.to_dict('records')
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 @app.callback(
@@ -420,6 +428,7 @@ def update_table(n_intervals):
 def update_table(n_intervals):
     event_time, value = ddc.get_top_100()
     value = value.to_dict('records')
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 @app.callback(
@@ -429,6 +438,7 @@ def update_table(n_intervals):
 def update_table(n_intervals):
     event_time, value = ddc.get_list_roads()
     value = value.to_dict('records')
+    if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
 

@@ -19,7 +19,7 @@ class Transformer:
         # Get roads' data
         self.roads_data = self.spark.read.csv('./Simulator/world.txt', sep=" ", header=False)
         self.dashboard_db = redis.Redis(
-            host='192.168.0.59',
+            host='10.22.180.106',
             port=6381,
             password='1234',
             db=3,
@@ -29,7 +29,7 @@ class Transformer:
     def read_data_from_redis(self):
         # connects to redis
         redis_client = redis.Redis(
-            host='192.168.0.59',
+            host='10.22.180.106',
             port=6381,
             password='1234',
             db=1,
@@ -50,8 +50,12 @@ class Transformer:
         # gets the data
         data = self.read_data_from_redis()
 
+        # if there is no data, return None
+        if len(data) == 0:
+            return None
+
         # create a spark dataframe with coumns key and value
-        self.df = self.spark.createDataFrame(data, ["key", "value"])
+        self.df = self.spark.createDataFrame(data, ['key', 'value'])
 
         # splits the columns key into time and plate and laue into road, lane and length
         # ! CHANGE THIS ONCE THE DATA IS UPDATED !
@@ -110,13 +114,17 @@ class Transformer:
     def add_analysis1(self):
         # n rodovias
         self.distinct_road_names_count = self.df.select("road_name").distinct().count()
+        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
         self.dashboard_db.set("n_roads", self.distinct_road_names_count)
+        self.dashboard_db.set("time_n_roads", min_time)
 
     def add_analysis2(self):
         # n veiculos
         self.distinct_car_names = self.df.select("car_plate").distinct()
         self.distinct_car_names_count = self.distinct_car_names.count()
         self.dashboard_db.set("n_cars", self.distinct_car_names_count)
+        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        self.dashboard_db.set("time_n_cars", min_time)
 
     def add_analysis3(self):
         # n veiculos risco colisao
@@ -185,4 +193,6 @@ class Transformer:
 t = Transformer()
 t.get_df()
 # t.individual_analysis()
+t.add_analysis1()
+t.add_analysis2()
 t.base_transform()
