@@ -3,6 +3,7 @@ import sys
 import redis
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import split
+from pyspark.sql.functions import count
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
@@ -63,7 +64,7 @@ class Transformer:
 
     def add_analysis1(self):
         # n rodovias
-        pass
+        self.distinct_road_names_count = self.df.select("road_name").distinct().count()
 
     def add_analysis2(self):
         # n veiculos
@@ -115,3 +116,4 @@ class Transformer:
 
 t = Transformer()
 t.get_df()
+t.individual_analysis()
