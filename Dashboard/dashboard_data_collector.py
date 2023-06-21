@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timedelta
 import pandas as pd
 from io import StringIO
+import string 
 
 # ===== Constants =====
 DEBUG = True
@@ -171,6 +172,8 @@ def get_top_100():
     if DEBUG:
         # Gerando dados aleatórios
         placas = ['ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456']
+        # gerando 100 placas aleatórias
+        placas += [f"{random.choice(string.ascii_uppercase)}{random.choice(string.ascii_uppercase)}{random.randint(1000, 9999)}" for _ in range(100)]
         n_rodovias = [random.randint(1, 10) for _ in range(len(placas))]
 
         # Construindo a string de dados
@@ -197,7 +200,7 @@ def get_list_roads():
         accidents = [random.randint(1, 10) for _ in range(len(rodovias))]
 
         # Construindo a string de dados
-        result = "Rodovia,Velocidade,Travessias,Acidentes\n"
+        result = "Rodovia,Velocidade média dos carros,Tempo médio de travessia,Número de acidentes\n"
         for rodovia, mean_speed, mean_cross, accident in zip(rodovias, mean_speeds, mean_crossing, accidents):
             result += f"{rodovia},{mean_speed},{mean_cross},{accident}\n"
 

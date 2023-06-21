@@ -8,9 +8,9 @@ import redis
 
 class Publisher:
     def __init__(self):
-        self.redis = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234")
-    def send_message(self, message_name, message_content):
-        self.redis.xadd(message_name, message_content)
+        self.redis = redis.Redis(host="192.168.0.79", port=6381, db=0, password="1234")
+    def send_message(self, message_channel, message_content):
+        self.redis.publish(message_channel, message_content)
 
 
 WORLD_FILE = "Simulator/world.txt"
@@ -263,12 +263,13 @@ class Car:
             self.road.delete_car(self.pos)
 
     def send_pos(self):
-        message = {
-            "plate" : self.plate,
-            "pos" : f"{self.pos[0]}, {self.pos[1]}",
-            "datetime" : time.time(),
-            "road": self.road.name,
-        }
+        # message = {
+        #     "plate" : self.plate,
+        #     "pos" : f"{self.pos[0]}, {self.pos[1]}",
+        #     "datetime" : time.time(),
+        #     "road": self.road.name,
+        # }
+        message = f"{time.time()},{self.road.name},{self.plate},{self.pos[0]},{self.pos[1]}"
         self.publisher.send_message("veiculo", message)
         print(f"Road: {self.road.name} Plate: {self.plate} Pos:{self.pos}")
     
@@ -399,7 +400,7 @@ class Road:
         ----""")
 
     def cycle(self):
-        time.sleep(1)
+        time.sleep(0.001)
         plate = 0
         # while True:
         for i in range(1):
