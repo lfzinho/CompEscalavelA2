@@ -17,19 +17,26 @@ class Subscriber:
         self.pubsub.subscribe("veiculo")
 
     def listen_and_save(self, n):
-        for message in self.pubsub.listen():
-            if message["type"] != "message":
-                continue
-            if self.debug:
-                print(message)
-            data = message['data'].split(",")
-            key = f"{data[2]}:{data[0]}"
-            value = f"{data[1]} {data[3]} {data[4]}"
-            self.redis.set(key, value)
-            n -= 1
-            if n<=0:
-                break
-
+        bar = n
+        while n>0:
+            try:
+                for message in self.pubsub.listen():
+                    if message["type"] != "message":
+                        continue
+                    if self.debug:
+                        print(message)
+                    data = message['data'].split(",")
+                    key = f"{data[0]} {data[2]}"
+                    value = f"{data[1]} {data[3]} {data[4]}"
+                    self.redis.set(key, value)
+                    n -= 1
+                    if (bar-n)%(n/100)<2:
+                        print(f"{1-n/bar} complete...", end="\r")
+                    if n<=0:
+                        break
+            except ConnectionError:
+                #tart again when connection times out
+                pass
 
 s = Subscriber()
-s.listen_and_save(1000)
+s.listen_and_save(10000)

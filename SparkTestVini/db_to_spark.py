@@ -2,7 +2,7 @@ import os
 import sys
 import redis
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, count, lit, lag, col, expr
+from pyspark.sql.functions import split, count, lit, lag, col, expr, countDistinct
 from pyspark.sql.window import Window
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -146,7 +146,12 @@ class Transformer:
 
     def add_analysis7(self):
         # ranking top 100 veiculos
-        pass
+        # forma burra:
+        df_top = self.df.groupBy("car_plate")
+        df_top = df_top.agg(countDistinct("road_name"))
+        df_top = df_top.sort(df_top['count(road_name)'].desc())
+        df_top.show(10)
+        return df_top
 
     def add_analysis8(self):
         # carros proibidos de circular
@@ -159,15 +164,10 @@ class Transformer:
     def add_analysis10(self):
         # lista de carros com direcao perigosa
         pass
-
-    
-
-    
-
     
         
 
 t = Transformer()
 t.get_df()
-t.individual_analysis()
+# t.individual_analysis()
 t.base_transform()
