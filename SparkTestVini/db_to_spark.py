@@ -3,6 +3,9 @@ import sys
 import redis
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import split, countDistinct
+from pyspark.sql.functions import count
+from pyspark.sql.functions import col
+from pyspark.sql.functions import lag, expr
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
@@ -15,6 +18,8 @@ class Transformer:
             .appName("RedisSparkIntegration") \
             .getOrCreate()
         
+        # Get roads' data
+        self.roads_data = self.spark.read.csv('./Simulator/world.txt', sep=" ", header=False)
     
     def read_data_from_redis(self):
         # connects to redis
@@ -63,27 +68,34 @@ class Transformer:
 
     def add_analysis1(self):
         # n rodovias
-        pass
+        self.distinct_road_names_count = self.df.select("road_name").distinct().count()
 
     def add_analysis2(self):
         # n veiculos
-        pass
+        self.distinct_road_names_count = self.df.select("car_plate").distinct().count()
 
     def add_analysis3(self):
         # n veiculos risco colisao
         pass
+        self.number_of_cars_in_risk_of_collision = self.cars_in_risk_of_collision.count()
 
     def add_analysis4(self):
         # n veiculos acima velocidade limite
         pass
+        self.number_of_cars_above_speed_limit = self.cars_above_speed_limit.count()
 
     def add_analysis5(self):
         # lista veiculos acima limite velocidade
+        # Get cars above speed limit
         pass
+        joined_df = self.df.join(self.roads_data, self.df["road_name"] == self.roads_data["_c0"], "inner")
+        self.cars_above_speed_limit = joined_df.filter(col("speed") > col("_c4"))
 
     def add_analysis6(self):
         # lista veiculos risco de colisao
         pass
+        joined_df = self.df.join(self.roads_data, self.df["road_name"] == self.roads_data["_c0"], "inner")
+        self.cars_above_speed_limit = joined_df.filter(col("speed") > col("_c4"))
 
     def historical_analysis(self):
         self.add_analysis7()
@@ -115,4 +127,3 @@ class Transformer:
 
 t = Transformer()
 t.get_df()
-t.add_analysis7()
