@@ -399,7 +399,7 @@ class Road:
         ----""")
 
     def cycle(self):
-        time.sleep(0.0001)
+        time.sleep(1)
         plate = 0
         # while True:
         for i in range(1):
