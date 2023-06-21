@@ -44,11 +44,11 @@ class Transformer:
         self.df = self.spark.createDataFrame(data, ["key", "value"])
 
         # now splits the columns key into time and plate and laue into road, lane and length
-        self.df = self.df.withColumn('time', split(df['key'], ' ').getItem(0)) \
-            .withColumn('car_plate', split(df['key'], ' ').getItem(1)) \
-            .withColumn('road_name', split(df['value'], ' ').getItem(0)) \
-            .withColumn('car_lane', split(df['value'], ' ').getItem(1)) \
-            .withColumn('car_length', split(df['value'], ' ').getItem(2))
+        self.df = self.df.withColumn('time', split(self.df['key'], ' ').getItem(0)) \
+            .withColumn('car_plate', split(self.df['key'], ' ').getItem(1)) \
+            .withColumn('road_name', split(self.df['value'], ' ').getItem(0)) \
+            .withColumn('car_lane', split(self.df['value'], ' ').getItem(1)) \
+            .withColumn('car_length', split(self.df['value'], ' ').getItem(2))
 
     def base_transform(self):
         pass
@@ -113,5 +113,5 @@ class Transformer:
     
         
 
-r = Reader()
-r.get_df()
+t = Transformer()
+t.get_df()
