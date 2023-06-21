@@ -6,6 +6,7 @@ from pyspark.sql.functions import split
 from pyspark.sql.functions import count
 from pyspark.sql.functions import col
 from pyspark.sql.functions import lag, expr
+from pyspark.sql.window import Window
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
@@ -20,7 +21,8 @@ class Transformer:
         
         # Get roads' data
         self.roads_data = self.spark.read.csv('./Simulator/world.txt', sep=" ", header=False)
-    
+        self.roads_data.show()
+
     def read_data_from_redis(self):
         # connects to redis
         redis_client = redis.Redis(
@@ -94,8 +96,21 @@ class Transformer:
     def add_analysis6(self):
         # lista veiculos risco de colisao
         pass
-        joined_df = self.df.join(self.roads_data, self.df["road_name"] == self.roads_data["_c0"], "inner")
-        self.cars_above_speed_limit = joined_df.filter(col("speed") > col("_c4"))
+        # Ordenar o DataFrame por rodovia, faixa e posição
+        df_analysis = self.df.orderBy("road_name", "car_lane", "car_lenght")
+
+        # Criar colunas para a posição e velocidade do carro da frente
+        df_analysis = df_analysis.withColumn("prev_lenght", lag("car_lenght").over(
+            Window.partitionBy("road_name", "car_lane").orderBy("car_lenght")
+        ))
+        df_analysis = df_analysis.withColumn("prev_speed", lag("car_speed").over(
+            Window.partitionBy("road_name", "car_lane").orderBy("car_lenght")
+        ))
+
+        # Calcular o risco de colisão usando a fórmula dada
+        df_analysis = df_analysis.withColumn("colision_risk", expr(
+            "(car_lenght + 2 * speed) >= prev_speed"
+        ))
 
     def historical_analysis(self):
         self.add_analysis7()
