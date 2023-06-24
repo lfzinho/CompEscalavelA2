@@ -6,9 +6,10 @@ import time
 from datetime import datetime, timedelta
 import pandas as pd
 from io import StringIO
+import string 
 
 # ===== Constants =====
-DEBUG = True
+DEBUG = False
 HIST_LIMIT = 2048
 
 # ===== Data =====
@@ -17,7 +18,13 @@ hist_n_over_speed = []
 hist_n_collisions_risk = []
 
 # ===== Redis =====
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(
+    host='10.22.180.106',
+    port=6381,
+    password='1234',
+    db=3,
+    decode_responses = True
+)
 
 # ===== Getters =====
 def update_hist(hist: list, time: int, new_val: int):
@@ -41,7 +48,7 @@ def get_n_roads():
         time_event = time.time()
     else:
         result = r.get('n_roads')
-        time_event = r.get('time_n_roads')
+        time_event = int(r.get('time_n_roads'))
     return (time_event, result)
 
 def get_n_cars():
@@ -52,7 +59,7 @@ def get_n_cars():
         time_event = time.time()
     else:
         result = r.get('n_cars')
-        time_event = r.get('time_n_cars')
+        time_event = int(r.get('time_n_cars'))
     update_hist(hist_n_cars, time_event, result)
     return (time_event, result)
 
@@ -95,10 +102,13 @@ def get_list_over_speed():
         for placa, velocidade, risco in zip(placas, velocidades, riscos_colisao):
             result += f"{placa},{velocidade},{risco}\n"
 
+        if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = time.time()
     else:
         result = r.get('list_over_speed')
+        
+        if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_over_speed')
     return (time_event, result)
@@ -120,6 +130,7 @@ def get_list_collisions_risk():
         time_event = time.time()
     else:
         result = r.get('list_collisions_risk')
+        if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_collisions_risk')
     return (time_event, result)
@@ -140,6 +151,8 @@ def get_list_banned_cars():
         time_event = time.time()
     else:
         result = r.get('list_banned_cars')
+        
+        if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_banned_cars')
     return (time_event, result)
@@ -161,6 +174,8 @@ def get_list_dangerous_cars():
         time_event = time.time()
     else:
         result = r.get('list_dangerous_cars')
+        
+        if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_dangerous_cars')
     return (time_event, result)
@@ -171,6 +186,8 @@ def get_top_100():
     if DEBUG:
         # Gerando dados aleatórios
         placas = ['ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456']
+        # gerando 100 placas aleatórias
+        placas += [f"{random.choice(string.ascii_uppercase)}{random.choice(string.ascii_uppercase)}{random.randint(1000, 9999)}" for _ in range(100)]
         n_rodovias = [random.randint(1, 10) for _ in range(len(placas))]
 
         # Construindo a string de dados
@@ -182,6 +199,8 @@ def get_top_100():
         time_event = time.time()
     else:
         result = r.get('top_100')
+        
+        if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_top_100')
     return (time_event, result)
@@ -197,7 +216,7 @@ def get_list_roads():
         accidents = [random.randint(1, 10) for _ in range(len(rodovias))]
 
         # Construindo a string de dados
-        result = "Rodovia,Velocidade,Travessias,Acidentes\n"
+        result = "Rodovia,Velocidade média dos carros,Tempo médio de travessia,Número de acidentes\n"
         for rodovia, mean_speed, mean_cross, accident in zip(rodovias, mean_speeds, mean_crossing, accidents):
             result += f"{rodovia},{mean_speed},{mean_cross},{accident}\n"
 
@@ -205,6 +224,8 @@ def get_list_roads():
         time_event = time.time()
     else:
         result = r.get('list_roads')
+        
+        if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_roads')
     return (time_event, result)
@@ -217,6 +238,7 @@ def get_general_graph():
     Returns a graph with overview data.
     """
     fig = go.Figure()
+    return fig
 
     # Add traces
     fig.add_trace(go.Scatter(x=[datetime.fromtimestamp(x[0]) for x in hist_n_cars],
@@ -289,7 +311,8 @@ if __name__ == "__main__":
         get_top_100()
         get_list_roads()
         time.sleep(0.001)
-        print("generating data...", i, end="\r")
+        if DEBUG:
+            print("generating data...", i, end="\r")
     
     fig = get_general_graph()
     fig.show()
