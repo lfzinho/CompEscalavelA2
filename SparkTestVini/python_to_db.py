@@ -4,7 +4,7 @@ import redis
 class Subscriber:
 
     def __init__(self):
-        self.debug = False
+        self.debug = True
         self.redis = redis.Redis(
             host='10.22.180.106',
             port=6381,

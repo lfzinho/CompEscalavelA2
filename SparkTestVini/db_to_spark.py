@@ -2,7 +2,7 @@ import os
 import sys
 import redis
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, count, lit, lag, col, expr, countDistinct
+from pyspark.sql.functions import split, count, lit, lag, col, expr, countDistinct, avg, when
 from pyspark.sql.window import Window
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -173,7 +173,7 @@ class Transformer:
         df_top = self.df.groupBy("car_plate")
         df_top = df_top.agg(countDistinct("road_name"))
         df_top = df_top.sort(df_top['count(road_name)'].desc())
-        df_top.show(10)
+        df_top.show(100)
         return df_top
 
     def add_analysis8(self):
@@ -183,6 +183,26 @@ class Transformer:
     def add_analysis9(self):
         # estatistica de cada rodovia
         pass
+        # pega uma tabela com nome da rodovia, tempo, placa do carro, velocidade do carro, comprimento da rodovia
+        # tabela = self.df_base
+        # cria uma coluna "time window", que é o horário - horario % "window length"
+        # agrupa por nome da rodovia, fazendo as seguintes operações de agregação:
+        #    cria uma coluna velocidade média que é a média da coluna de velocidade dos carros
+        #    cria uma coluna número de acidentes que é um count dos carros com velocidade igual a 0
+        #    cria uma coluna tempo médio para atravessar que 
+
+        # Assuming your base table is called "car_data", load it into a DataFrame
+        car_data = self.spark.table("car_data")
+
+        # Perform the necessary aggregations
+        road_stats = car_data.groupBy("road_name", "time").agg(
+            avg("speed").alias("mean_speed"),
+            count(when(car_data.speed == 0, True)).alias("n_accidents"),
+            (car_data.road_length / avg("speed")).alias("avg_traversal_time")
+        )
+
+        print(road_stats)
+
 
     def add_analysis10(self):
         # lista de carros com direcao perigosa
