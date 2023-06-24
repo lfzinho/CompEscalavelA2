@@ -8,7 +8,7 @@ import redis
 
 class Publisher:
     def __init__(self):
-        self.redis = redis.Redis(host="10.22.224.145", port=6381, db=0, password="1234")
+        self.redis = redis.Redis(host="10.22.156.68", port=6381, db=0, password="1234")
     def send_message(self, message_name, message_content):
         self.redis.xadd(message_name, message_content)
 

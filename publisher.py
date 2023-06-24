@@ -1,7 +1,7 @@
 class Publisher:
 
     def __init__(self):
-        self.redis = redis.Redis(host="10.22.224.145", port=6381, db=0, password="1234")
+        self.redis = redis.Redis(host="10.22.156.68", port=6381, db=0, password="1234")
     
     def send_message(self, message_name, message_content):
         r.xadd(message_name, message_content)
@@ -20,7 +20,7 @@ from faker_vehicle import VehicleProvider
 fake = Faker("pt_BR")
 fake.add_provider(VehicleProvider)
 
-r = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234")
+r = redis.Redis(host="10.22.156.68", port=6380, db=0, password="1234")
 
 while True:
     # Contém a placa do veículo, a rodovia e a posição do veículo

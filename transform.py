@@ -3,7 +3,7 @@ import redis
 
 # FORNARO
 
-r = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234", decode_responses=True)
+r = redis.Redis(host="10.22.156.68", port=6380, db=0, password="1234", decode_responses=True)
 
 def extract_speed_and_acceleration(message):
     try:
