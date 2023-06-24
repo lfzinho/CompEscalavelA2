@@ -30,7 +30,7 @@ class Subscriber:
                     value = f"{data[1]} {data[3]} {data[4]}"
                     self.redis.set(key, value)
                     n -= 1
-                    if (bar-n)%(n/100)<2:
+                    if (bar-n)%(n+1/100)<2:
                         print(f"{1-n/bar} complete...", end="\r")
                     if n<=0:
                         break
