@@ -8,6 +8,8 @@ from pyspark.sql.window import Window
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
+T = 3000
+
 class Transformer:
 
     def __init__(self) -> None:
@@ -19,17 +21,25 @@ class Transformer:
         # Get roads' data
         self.roads_data = self.spark.read.csv('./Simulator/world.txt', sep=" ", header=False)
         self.dashboard_db = redis.Redis(
-            host='10.22.164.196',
+            host='10.22.160.187',
             port=6381,
             password='1234',
             db=3,
             decode_responses = True,
         )        
 
+        self.fined_cars = {}
+        # structure: {car_plate: 
+        #               { n_fines: fines number,
+        #                 time: time of the last fine
+        #               }
+
+        self.forbidden_cars = {}
+
     def read_data_from_redis(self):
         # connects to redis
         redis_client = redis.Redis(
-            host='10.22.164.196',
+            host='10.22.160.187',
             port=6381,
             password='1234',
             db=1,
@@ -54,7 +64,7 @@ class Transformer:
         if len(data) == 0:
             return None
 
-        # create a spark dataframe with coumns key and value
+        # create a spark dataframe with coumns key and value 
         self.df = self.spark.createDataFrame(data, ['key', 'value'])
 
         # splits the columns key into time and plate and laue into road, lane and length
@@ -89,19 +99,23 @@ class Transformer:
 
         # Calculates the speed
         speeds = self.df.withColumn("speed", (self.df["car_length"] - self.df["prev_length"]) / (self.df["time"] - self.df["prev_time"] + 0.1))
-        speeds = speeds.select("car_plate", "time", "speed")
+        speeds = speeds.select("time", "speed")
 
         # Calculates the acceleration
         accs = self.df.withColumn("acceleration", (self.df["car_length"] - 2 * self.df["prev_length"] + self.df["prev_prev_length"]) / ((self.df["time"] - self.df["prev_time"] + 0.1) * (self.df["time"] - self.df["prev_time"] + 0.1)))
-        accs = accs.select("car_plate", "time", "acceleration")
+        accs = accs.select("time", "acceleration")
 
         # Calculates the change of lane
         lane_changes = self.df.withColumn("lane_change", (self.df["car_lane"] == self.df["prev_lane"]))
-        lane_changes = lane_changes.select("car_plate", "time", "lane_change")
+        lane_changes = lane_changes.select("time", "lane_change")
         
         # Joins the dataframes and save it to class variable
-        self.df_base = speeds.join(accs, "time", "outer") \
+        self.df_base = self.df.join(speeds, "time", "outer") \
+            .join(accs, "time", "outer") \
             .join(lane_changes, "time", "outer")
+        
+        # Export to csv
+        self.df_base.coalesce(1).write.format("csv").option("header", "true").save("base.csv")
 
     def individual_analysis(self):
         self.add_analysis1()
@@ -173,12 +187,40 @@ class Transformer:
         df_top = self.df.groupBy("car_plate")
         df_top = df_top.agg(countDistinct("road_name"))
         df_top = df_top.sort(df_top['count(road_name)'].desc())
-        df_top.show(10)
+        df_top.show(100)
         return df_top
 
     def add_analysis8(self):
         # carros proibidos de circular
-        pass
+
+        # Passa por todos os carros acima do limite de velocidade
+        for car in self.cars_above_speed_limit.collect():
+            # Se o carro ainda não estiver na lista de carros multados
+            if car not in self.fined_cars:
+                self.fined_cars[car['car_plate']] = {
+                    'n_fines': 1,
+                    'time': car['time']
+                }
+            # Se o carro já estiver na lista de carros multados
+            else:
+                # Verifica se o carro já foi multado nos últimos 10 segundos
+                if car['time'] <= self.fined_cars[car['car_plate']]['time'] + 10:
+                    pass
+                # Se a última multa tiver sido a mais de T segundos
+                elif car['time'] > self.fined_cars[car['car_plate']]['time'] + T:
+                    # Reseta o contador de multas
+                    self.fined_cars[car['car_plate']]['n_fines'] = 1
+                    self.fined_cars[car['car_plate']]['time'] = car['time']
+                # Se a última multa tiver sido a menos de T segundos
+                else:
+                    # Incrementa o contador de multas
+                    self.fined_cars[car['car_plate']]['n_fines'] += 1
+                    self.fined_cars[car['car_plate']]['time'] = car['time']
+            
+            # Se o carro já tiver sido multado 10 vezes
+            if self.fined_cars[car['car_plate']]['n_fines'] >= 10:
+                # Adiciona o carro à lista de carros proibidos
+                self.forbidden_cars['car_plate'] = True
 
     def add_analysis9(self):
         # estatistica de cada rodovia
@@ -187,12 +229,13 @@ class Transformer:
     def add_analysis10(self):
         # lista de carros com direcao perigosa
         pass
-    
-        
 
+quit()
 t = Transformer()
-t.get_df()
-# t.individual_analysis()
-t.add_analysis1()
-t.add_analysis2()
-t.base_transform()
+if t.get_df() is None:
+    # Sem dados no banco
+    pass
+else:
+    t.add_analysis1()
+    t.add_analysis2()
+    t.base_transform()

@@ -6,7 +6,7 @@ class Subscriber:
     def __init__(self):
         self.debug = False
         self.redis = redis.Redis(
-            host='10.22.164.196',
+            host='10.22.160.187',
             port=6381,
             password='1234',
             db=1,
@@ -35,7 +35,7 @@ class Subscriber:
                     if n<=0:
                         break
             except ConnectionError:
-                #tart again when connection times out
+                # start again when connection times out
                 pass
 
 s = Subscriber()

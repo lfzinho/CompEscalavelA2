@@ -1,11 +1,11 @@
 import plotly.express as px
 import plotly.graph_objects as go
-import redis
-import random
-import time
-from datetime import datetime, timedelta
-import pandas as pd
-from io import StringIO
+import redis 
+import random 
+import time 
+from datetime import datetime, timedelta 
+import pandas as pd 
+from io import StringIO 
 import string 
 
 # ===== Constants =====
@@ -19,7 +19,7 @@ hist_n_collisions_risk = []
 
 # ===== Redis =====
 r = redis.Redis(
-    host='10.22.164.196',
+    host='10.22.160.187',
     port=6381,
     password='1234',
     db=3,
@@ -53,7 +53,7 @@ def get_n_roads():
             time_event = int(time_event)
     return (time_event, result)
 
-def get_n_cars():
+def get_n_cars(): 
     result = 0
     time_event = 0
     if DEBUG:
@@ -81,7 +81,7 @@ def get_n_over_speed():
     update_hist(hist_n_over_speed, time_event, result)
     return (time_event, result)
 
-def get_n_collisions_risk():
+def get_n_collisions_risk(): 
     result = 0
     time_event = 0
     if DEBUG:

@@ -6,7 +6,7 @@ import redis
 
 spark = SparkSession.builder\
     .appName("Exemplo Redis") \
-    .config("spark.redis.host", "10.22.164.196") \
+    .config("spark.redis.host", "10.22.160.187") \
     .config("spark.redis.port", "6381") \
     .config("spark.redis.auth", "1234") \
     .config("spark.redis.db", "0") \
@@ -14,7 +14,7 @@ spark = SparkSession.builder\
 
 
 r = redis.Redis(
-    host='10.22.164.196',
+    host='10.22.160.187',
     port=6381,
     password='1234',
     db=0,
