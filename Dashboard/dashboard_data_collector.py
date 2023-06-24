@@ -19,7 +19,7 @@ hist_n_collisions_risk = []
 
 # ===== Redis =====
 r = redis.Redis(
-    host='10.22.180.106',
+    host='10.22.164.196',
     port=6381,
     password='1234',
     db=3,
@@ -48,7 +48,9 @@ def get_n_roads():
         time_event = time.time()
     else:
         result = r.get('n_roads')
-        time_event = int(r.get('time_n_roads'))
+        time_event = r.get('time_n_roads')
+        if time_event is not None:
+            time_event = int(time_event)
     return (time_event, result)
 
 def get_n_cars():
@@ -59,7 +61,9 @@ def get_n_cars():
         time_event = time.time()
     else:
         result = r.get('n_cars')
-        time_event = int(r.get('time_n_cars'))
+        time_event = r.get('time_n_cars')
+        if time_event is not None:
+            time_event = int(time_event)
     update_hist(hist_n_cars, time_event, result)
     return (time_event, result)
 
@@ -72,6 +76,8 @@ def get_n_over_speed():
     else:
         result = r.get('n_over_speed')
         time_event = r.get('time_n_over_speed')
+        if time_event is not None:
+            time_event = int(time_event)
     update_hist(hist_n_over_speed, time_event, result)
     return (time_event, result)
 
@@ -84,6 +90,8 @@ def get_n_collisions_risk():
     else:
         result = r.get('n_collisions_risk')
         time_event = r.get('time_n_collisions_risk')
+        if time_event is not None:
+            time_event = int(time_event)
     update_hist(hist_n_collisions_risk, time_event, result)
     return (time_event, result)
 
@@ -111,6 +119,8 @@ def get_list_over_speed():
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_over_speed')
+        if time_event is not None:
+            time_event = int(time_event)
     return (time_event, result)
 
 def get_list_collisions_risk():
@@ -133,6 +143,8 @@ def get_list_collisions_risk():
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_collisions_risk')
+        if time_event is not None:
+            time_event = int(time_event)
     return (time_event, result)
 
 def get_list_banned_cars():
@@ -155,6 +167,8 @@ def get_list_banned_cars():
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_banned_cars')
+        if time_event is not None:
+            time_event = int(time_event)
     return (time_event, result)
 
 
@@ -178,6 +192,8 @@ def get_list_dangerous_cars():
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_dangerous_cars')
+        if time_event is not None:
+            time_event = int(time_event)
     return (time_event, result)
 
 def get_top_100():
@@ -203,6 +219,8 @@ def get_top_100():
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_top_100')
+        if time_event is not None:
+            time_event = int(time_event)
     return (time_event, result)
 
 def get_list_roads():
@@ -228,6 +246,8 @@ def get_list_roads():
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_roads')
+        if time_event is not None:
+            time_event = int(time_event)
     return (time_event, result)
 
 
@@ -238,18 +258,20 @@ def get_general_graph():
     Returns a graph with overview data.
     """
     fig = go.Figure()
-    return fig
 
     # Add traces
-    fig.add_trace(go.Scatter(x=[datetime.fromtimestamp(x[0]) for x in hist_n_cars],
-                                y=[x[1] for x in hist_n_cars],
-                                name="Cars"))
-    fig.add_trace(go.Scatter(x=[datetime.fromtimestamp(x[0]) for x in hist_n_over_speed],
-                                y=[x[1] for x in hist_n_over_speed],
-                                name="Over speed"))
-    fig.add_trace(go.Scatter(x=[datetime.fromtimestamp(x[0]) for x in hist_n_collisions_risk],
-                                y=[x[1] for x in hist_n_collisions_risk],
-                                name="Collisions risk"))
+    try:
+        fig.add_trace(go.Scatter(x=[datetime.fromtimestamp(x[0]) for x in hist_n_cars],
+                                    y=[x[1] for x in hist_n_cars],
+                                    name="Cars"))
+        fig.add_trace(go.Scatter(x=[datetime.fromtimestamp(x[0]) for x in hist_n_over_speed],
+                                    y=[x[1] for x in hist_n_over_speed],
+                                    name="Over speed"))
+        fig.add_trace(go.Scatter(x=[datetime.fromtimestamp(x[0]) for x in hist_n_collisions_risk],
+                                    y=[x[1] for x in hist_n_collisions_risk],
+                                    name="Collisions risk"))
+    except:
+        pass
     
     # Edit the layout
     fig.update_layout(title='<b>📈 Dados Gerais</b>',

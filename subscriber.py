@@ -7,7 +7,7 @@
 
 import redis
 
-r = redis.Redis(host="10.22.224.145", port=6380, db=0, password="1234")
+r = redis.Redis(host="10.22.156.68", port=6380, db=0, password="1234")
 
 def count_plate(plate):
     plt = plate[b'plate']
