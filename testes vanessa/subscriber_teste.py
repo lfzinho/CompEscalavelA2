@@ -1,7 +1,7 @@
 import redis
 
 r = redis.Redis(
-    host='192.168.0.59',
+    host='10.22.180.106',
     port=6381,
     password='1234',
     db=0
