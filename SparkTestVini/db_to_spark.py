@@ -21,7 +21,7 @@ class Transformer:
         # Get roads' data
         self.roads_data = self.spark.read.csv('./Simulator/world.txt', sep=" ", header=False)
         self.dashboard_db = redis.Redis(
-            host='10.22.160.187',
+            host='10.125.129.51',
             port=6381,
             password='1234',
             db=3,
@@ -39,7 +39,7 @@ class Transformer:
     def read_data_from_redis(self):
         # connects to redis
         redis_client = redis.Redis(
-            host='10.22.160.187',
+            host='10.125.129.51',
             port=6381,
             password='1234',
             db=1,
@@ -193,6 +193,19 @@ class Transformer:
     def add_analysis8(self):
         # carros proibidos de circular
 
+        # Obs.: A maneira que eu fiz aqui na hora foi totalmente em
+        # Python, mas depois que eu meditei a respeito tem uma maneira de
+        # fazer isso usando só o Spark:
+
+        # 1. Verifica se já existe uma lista de carros com multas
+        # 2. Se não existir, salva a lista de carros multados
+        # 3. Se existir, faz um outer join entre a lista de carros multados
+        # 3.1. Depois do join, calcula o tempo entre a última multa e a multa atual
+        # 3.2. Se o tempo for menor que 10, ignora (trata-se de uma multa repetida)
+        # 3.2. Se o tempo for maior que T, reseta o contador de multas
+        # 3.3. Caso contrário, incrementa o contador de multas
+        # 4. Se o número de multas for maior que 10, adiciona o carro à lista de carros proibidos
+
         # Passa por todos os carros acima do limite de velocidade
         for car in self.cars_above_speed_limit.collect():
             # Se o carro ainda não estiver na lista de carros multados
@@ -250,7 +263,7 @@ class Transformer:
         # lista de carros com direcao perigosa
         pass
 
-quit()
+# quit()
 t = Transformer()
 if t.get_df() is None:
     # Sem dados no banco
