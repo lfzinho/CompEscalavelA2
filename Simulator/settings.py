@@ -1,1 +1,0 @@
-WORLD_FILE = "world.txt"
