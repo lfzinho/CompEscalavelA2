@@ -33,10 +33,18 @@ app.layout = html.Div([
     dbc.Row(className="header", justify="center", children=[
         dbc.Col([
             html.H3("🚗 Dashboard - Grupo Top", className="headerElement text-center bold"),
-        ], width=8),
+        ], width=8)
     ]),
     # Body 
     html.Div(className="body", children=[
+        # Mock controler
+        dbc.Row([
+            html.P("Número de rodovias em cada instância: ", className="mockInline"),
+            dcc.Input(
+            id="simulator_n_roads", type="number", placeholder="(+10)", className="mockInline",
+            min=0, max=100, step=10, value=0, style={'width': '100px'}),
+            html.P("", id="simulator_n_roads_text")
+        ], justify="center", class_name="mockControler"),
         # Body - Info & Graph
         dbc.Row([
             # Body - Info
@@ -441,6 +449,13 @@ def update_table(n_intervals):
     if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
+@app.callback(
+    [Output('simulator_n_roads_text', 'children')],
+    [Input('simulator_n_roads', 'value')]
+    )
+def update_simulator_n_roads(n):
+    ddc.set_simulator_n_roads(n)
+    return [""]
 
 # ===== Main =====
 if __name__ == '__main__':
