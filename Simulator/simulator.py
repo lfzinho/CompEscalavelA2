@@ -22,7 +22,7 @@ class RoadNumberGetter:
             decode_responses = True
         )
     def get_number_roads(self):
-        value = self.redis.get("n_roads")
+        value = self.redis.get("simulator_n_roads")
         return value
 
 
