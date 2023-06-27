@@ -1,9 +1,11 @@
 import os
 import sys
 import redis
+import pandas as pd
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import split, count, lit, lag, col, expr, countDistinct, avg, when
 from pyspark.sql.window import Window
+from pyspark.sql.functions import split, count, lit, lag, col, expr, countDistinct, avg, when
+from pyspark.sql.functions import sum as spark_sum
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
@@ -89,33 +91,31 @@ class Transformer:
         # Gets all the cars
         windowSpec = Window.partitionBy("car_plate").orderBy("time")
 
+        df = self.df
         # Uses lag to get the previous time, length and lane
-        self.df = self.df.withColumn("prev_time", lag("time", 1).over(windowSpec))
-        self.df = self.df.withColumn("prev_length", lag("car_length", 1).over(windowSpec))
-        self.df = self.df.withColumn("prev_lane", lag("car_lane", 1).over(windowSpec))
+        df = df.withColumn("prev_time", lag("time", 1).over(windowSpec))
+        df = df.withColumn("prev_length", lag("car_length", 1).over(windowSpec))
+        df = df.withColumn("prev_lane", lag("car_lane", 1).over(windowSpec))
         # Uses lag to get previous previous time and length
-        self.df = self.df.withColumn("prev_prev_time", lag("time", 2).over(windowSpec))
-        self.df = self.df.withColumn("prev_prev_length", lag("car_length", 2).over(windowSpec))
+        df = df.withColumn("prev_prev_time", lag("time", 2).over(windowSpec))
+        df = df.withColumn("prev_prev_length", lag("car_length", 2).over(windowSpec))
 
         # Calculates the speed
-        speeds = self.df.withColumn("speed", (self.df["car_length"] - self.df["prev_length"]) / (self.df["time"] - self.df["prev_time"] + 0.1))
+        speeds = df.withColumn("speed", (df["car_length"] - df["prev_length"]) / (df["time"] - df["prev_time"] + 0.1))
         speeds = speeds.select("time", "speed")
 
         # Calculates the acceleration
-        accs = self.df.withColumn("acceleration", (self.df["car_length"] - 2 * self.df["prev_length"] + self.df["prev_prev_length"]) / ((self.df["time"] - self.df["prev_time"] + 0.1) * (self.df["time"] - self.df["prev_time"] + 0.1)))
+        accs = df.withColumn("acceleration", (df["car_length"] - 2 * df["prev_length"] + df["prev_prev_length"]) / ((df["time"] - df["prev_time"] + 0.1) * (df["time"] - df["prev_time"] + 0.1)))
         accs = accs.select("time", "acceleration")
 
         # Calculates the change of lane
-        lane_changes = self.df.withColumn("lane_change", (self.df["car_lane"] == self.df["prev_lane"]))
-        lane_changes = lane_changes.select("time", "lane_change")
-        
+        lane_changes = df.select("time", (col("car_lane") == col("prev_lane")).alias("lane_change"))
+        # lane_changes = lane_changes.select("time", "lane_change")
+
         # Joins the dataframes and save it to class variable
-        self.df_base = self.df.join(speeds, "time", "outer") \
+        self.df_base = df.join(speeds, "time", "outer") \
             .join(accs, "time", "outer") \
             .join(lane_changes, "time", "outer")
-        
-        # Export to csv
-        self.df_base.coalesce(1).write.format("csv").option("header", "true").save("base.csv")
 
     def individual_analysis(self):
         self.add_analysis1()
@@ -127,14 +127,14 @@ class Transformer:
 
     def add_analysis1(self):
         # n rodovias
-        self.distinct_road_names_count = self.df.select("road_name").distinct().count()
+        self.distinct_road_names_count = self.df.select("road_name").na.drop().distinct().count()
         min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
         self.dashboard_db.set("n_roads", self.distinct_road_names_count)
         self.dashboard_db.set("time_n_roads", min_time)
 
     def add_analysis2(self):
         # n veiculos
-        self.distinct_car_names = self.df.select("car_plate").distinct()
+        self.distinct_car_names = self.df.select("car_plate").na.drop().distinct()
         self.distinct_car_names_count = self.distinct_car_names.count()
         self.dashboard_db.set("n_cars", self.distinct_car_names_count)
         min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
@@ -142,39 +142,49 @@ class Transformer:
 
     def add_analysis3(self):
         # n veiculos risco colisao
-        pass
         self.number_of_cars_in_risk_of_collision = self.cars_in_risk_of_collision.count()
 
     def add_analysis4(self):
         # n veiculos acima velocidade limite
-        pass
         self.number_of_cars_above_speed_limit = self.cars_above_speed_limit.count()
 
     def add_analysis5(self):
         # lista veiculos acima limite velocidade
         # Get cars above speed limit
-        pass
-        joined_df = self.df.join(self.roads_data, self.df["road_name"] == self.roads_data["_c0"], "inner")
-        self.cars_above_speed_limit = joined_df.filter(col("speed") > col("_c4"))
+        joined_df = self.df_base.join(self.roads_data, 'road_name', "inner")
+        cars_above_speed_limit = joined_df.filter(col("speed") > col("speed_limit"))
+
+        # Agrupa os dados pelo par único de 'car_plate' e 'road_name' e seleciona a primeira linha de cada grupo
+        unique_cars = cars_above_speed_limit.dropDuplicates(['car_plate', 'road_name'])
+
+        unique_cars.select("time","road_name", "car_plate", "speed", "speed_limit").show()
+
+        self.cars_above_speed_limit = unique_cars
 
     def add_analysis6(self):
         # lista veiculos risco de colisao
-        pass
+        CONSTANT_TO_COLISION_RISK = 2
+
         # Ordenar o DataFrame por rodovia, faixa e posição
-        df_analysis = self.df.orderBy("road_name", "car_lane", "car_lenght")
+        df_analysis = self.df_base.orderBy("road_name", "car_lane", "car_length")
 
         # Criar colunas para a posição e velocidade do carro da frente
-        df_analysis = df_analysis.withColumn("prev_lenght", lag("car_lenght").over(
-            Window.partitionBy("road_name", "car_lane").orderBy("car_lenght")
+        df_analysis = df_analysis.withColumn("prev_length", lag("car_length").over(
+            Window.partitionBy("road_name", "car_lane").orderBy("car_length")
         ))
-        df_analysis = df_analysis.withColumn("prev_speed", lag("car_speed").over(
-            Window.partitionBy("road_name", "car_lane").orderBy("car_lenght")
+
+        df_analysis = df_analysis.withColumn("prev_speed", lag("speed").over(
+            Window.partitionBy("road_name", "car_lane").orderBy("car_length")
         ))
 
         # Calcular o risco de colisão usando a fórmula dada
-        df_analysis = df_analysis.withColumn("colision_risk", expr(
-            "(car_lenght + 2 * speed) >= prev_speed"
+        df_analysis = df_analysis.withColumn(
+            "colision_risk", 
+            expr(
+                f"(car_length + {CONSTANT_TO_COLISION_RISK} * speed) >= prev_speed"
         ))
+
+        self.cars_in_risk_of_collision = df_analysis
 
     def historical_analysis(self):
         self.add_analysis7()
@@ -193,75 +203,71 @@ class Transformer:
     def add_analysis8(self):
         # carros proibidos de circular
 
-        # Obs.: A maneira que eu fiz aqui na hora foi totalmente em
-        # Python, mas depois que eu meditei a respeito tem uma maneira de
-        # fazer isso usando só o Spark:
+        import time
+        delta_T = 10 # Variação do tempo para considerar os excessos de velocidade
+        T = time.time() - delta_T
+        # T = 1687802414.381332 - delta_T # testes
 
-        # 1. Verifica se já existe uma lista de carros com multas
-        # 2. Se não existir, salva a lista de carros multados
-        # 3. Se existir, faz um outer join entre a lista de carros multados
-        # 3.1. Depois do join, calcula o tempo entre a última multa e a multa atual
-        # 3.2. Se o tempo for menor que 10, ignora (trata-se de uma multa repetida)
-        # 3.2. Se o tempo for maior que T, reseta o contador de multas
-        # 3.3. Caso contrário, incrementa o contador de multas
-        # 4. Se o número de multas for maior que 10, adiciona o carro à lista de carros proibidos
+        # Consulta inicial para selecionar os dados em (time - T)
+        df_filtered = self.df_base.select("time", "road_name", "car_plate", "speed").filter(col("time") >= T)
 
-        # Passa por todos os carros acima do limite de velocidade
-        for car in self.cars_above_speed_limit.collect():
-            # Se o carro ainda não estiver na lista de carros multados
-            if car not in self.fined_cars:
-                self.fined_cars[car['car_plate']] = {
-                    'n_fines': 1,
-                    'time': car['time']
-                }
-            # Se o carro já estiver na lista de carros multados
-            else:
-                # Verifica se o carro já foi multado nos últimos 10 segundos
-                if car['time'] <= self.fined_cars[car['car_plate']]['time'] + 10:
-                    pass
-                # Se a última multa tiver sido a mais de T segundos
-                elif car['time'] > self.fined_cars[car['car_plate']]['time'] + T:
-                    # Reseta o contador de multas
-                    self.fined_cars[car['car_plate']]['n_fines'] = 1
-                    self.fined_cars[car['car_plate']]['time'] = car['time']
-                # Se a última multa tiver sido a menos de T segundos
-                else:
-                    # Incrementa o contador de multas
-                    self.fined_cars[car['car_plate']]['n_fines'] += 1
-                    self.fined_cars[car['car_plate']]['time'] = car['time']
-            
-            # Se o carro já tiver sido multado 10 vezes
-            if self.fined_cars[car['car_plate']]['n_fines'] >= 10:
-                # Adiciona o carro à lista de carros proibidos
-                self.forbidden_cars['car_plate'] = True
+        # Faz join entre as duas tabelas
+        joined_df = df_filtered.join(self.roads_data.select("road_name", "speed_limit"), 'road_name', "inner")
+
+        # Calcula os carros acima do limite de velocidade (1 para sim e 0 para não)
+        df_speeding = joined_df.withColumn("is_speeding", when(col("speed") > col("speed_limit"), 1).otherwise(0))
+
+        # Utiliza ordenação e lag para verificar se o carro está acima da velocidade sequencialmente
+        df_speeding = df_speeding.withColumn("prev_speed", lag(col("is_speeding")).over(Window.partitionBy("car_plate").orderBy("time")))
+        df_speeding = df_speeding.withColumn("is_first_speeding", when(col("prev_speed").isNull(), col("is_speeding")).otherwise(col("is_speeding") - col("prev_speed")))
+
+        # Filtra apenas os carros com resultado igual a 1
+        df_filtered_speeding = df_speeding.filter(col("is_first_speeding") == 1)
+
+        # Conta quantas vezes cada carro esteve acima da velocidade (count por car_plate)
+        df_count_speeding = df_filtered_speeding.groupBy("car_plate").agg(spark_sum("is_first_speeding").alias("count_speeding"))
+
+        # Filtra apenas os carros com 10 ou mais excessos de velocidade
+        df_final_result = df_count_speeding.filter(col("count_speeding") >= 10)
+
+        # Exibe o resultado final
+        df_final_result.show()
 
     def add_analysis9(self):
         # estatistica de cada rodovia
-        pass
-        # pega uma tabela com nome da rodovia, tempo, placa do carro, velocidade do carro, comprimento da rodovia
-        # tabela = self.df_base
-        # cria uma coluna "time window", que é o horário - horario % "window length"
-        # agrupa por nome da rodovia, fazendo as seguintes operações de agregação:
-        #    cria uma coluna velocidade média que é a média da coluna de velocidade dos carros
-        #    cria uma coluna número de acidentes que é um count dos carros com velocidade igual a 0
-        #    cria uma coluna tempo médio para atravessar que 
-
-        # Assuming your base table is called "car_data", load it into a DataFrame
-        car_data = self.spark.table("car_data")
-
-        # Perform the necessary aggregations
-        road_stats = car_data.groupBy("road_name", "time").agg(
+        df_complete = self.df_base.join(self.roads_data, "road_name")
+        self.road_stats = df_complete.groupBy("road_name", "time").agg(
             avg("speed").alias("mean_speed"),
-            count(when(car_data.speed == 0, True)).alias("n_accidents"),
-            (car_data.road_length / avg("speed")).alias("avg_traversal_time")
+            count(when(df_complete.speed == 0, True)).alias("n_accidents"),
+            (avg("road_length") / avg("speed")).alias("avg_traversal_time")
         )
-
-        print(road_stats)
 
 
     def add_analysis10(self):
-        # lista de carros com direcao perigosa
-        pass
+        # Define the safety variables
+        safe_speed = 100
+        safe_acc = 100
+        t = 1000
+        n = 6
+
+        # Define the conditions for risk events
+        speed_condition = col("speed") > safe_speed
+        acceleration_condition = col("acceleration") > safe_acc
+        lane_change_condition = (col("lane_change") == True) & (lag(col("lane_change")).over(
+            Window.partitionBy("car_plate").orderBy("time")) == True
+        )
+
+        # Create the "risk_counter" column
+        df_risk = self.df_base.withColumn("risk_counter", when(speed_condition, 1).otherwise(0)
+                                    + when(acceleration_condition, 1).otherwise(0)
+                                    + when(lane_change_condition, 1).otherwise(0)
+        )
+
+        # Calculate the "dangerous_driving" column based on the "risk_count" column
+        self.df_risk = df_risk.withColumn("dangerous_driving", when(spark_sum(col("risk_counter")).over(
+            Window.partitionBy("car_plate").orderBy("time").rowsBetween(Window.currentRow - t, Window.currentRow - 1)
+        ) >= n, True).otherwise(False))
+
 
 # quit()
 t = Transformer()
