@@ -315,6 +315,10 @@ class Road:
 
         self.collision_total = 0
 
+        self.car_min = 100
+        self.car_max = 500
+        self.car_counter = 0
+
         # processes
         self.processes = {}
 
@@ -421,7 +425,7 @@ class Road:
             #mark
             for lane in range(self.lanes_total):
                 # if random.random() < self.car_spawn_prob and plate<2:
-                if random.random() < self.car_spawn_prob and self.road[lane][0] is None:
+                if (random.random() < self.car_spawn_prob) and (self.road[lane][0] is None) and (self.car_counter < self.car_max):
                     
                     car = Car(self, lane, self.car_speed_min, self.car_speed_max, self.car_acc_min, self.car_acc_max, self.prob_of_changing_lane, self.prob_of_collision, self.collision_countdown, plate)
                     # only creates the car if the car isn't already in the road
@@ -433,12 +437,14 @@ class Road:
                         #process = multiprocessing.Process(target=car.cycle)
                         # self.processes[car.plate] =  process
                         process.start()
+                        self.car_counter += 1
                     break
     
     def delete_car(self, car_pos):
         if self.road[car_pos[0]][car_pos[1]] is not None:
             self.road[car_pos[0]][car_pos[1]].cycle_flag = False
             self.road[car_pos[0]][car_pos[1]] = None
+            self.car_counter -= 1
         
 
 
@@ -478,7 +484,7 @@ class World:
             for i in range(self.n_roads):
                 if i==self.created_roads:
                     # creates attr variable
-                    line = file[i]
+                    line = file.readlines()[i]
                     attr = line.split(' ')
                     self.create_road(attr)
     
