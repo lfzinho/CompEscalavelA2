@@ -13,6 +13,19 @@ class Publisher:
         self.redis.publish(message_channel, message_content)
 
 
+class WorldDataReader:
+    def __init__(self):
+        self.redis = redis.Redis(
+            host = "10.22.160.167",
+            port = 6381,
+            db = 0,
+            password = "1234",
+            decode_responses = True
+        )
+    def get_number_instances(self):
+        self.redis.get("n_instances")
+
+
 WORLD_FILE = "Simulator/world.txt"
 
 MODELS = {
@@ -434,6 +447,8 @@ class World:
     def __init__(self):
         self.roads: list[Road] = []
         self.processes = {}
+        self.n_roads = 1
+        self.created_roads = 0
 
         self.main()
 
@@ -460,11 +475,12 @@ class World:
     
     def create_all_roads(self):
         with open(WORLD_FILE, 'r', encoding='utf-8') as file:
-            for line in file:
-                # creates attr variable
-                attr = line.split(' ')
-
-                self.create_road(attr)
+            for i in range(self.n_roads):
+                if i==self.created_roads:
+                    # creates attr variable
+                    line = file[i]
+                    attr = line.split(' ')
+                    self.create_road(attr)
     
     def create_processes(self):
         while True:
@@ -493,6 +509,10 @@ class World:
         
         try:
             while True:
+                if self.world_data_reader.get_number_instances()>self.created_roads:
+                    self.create_all_roads()
+                    self.create_processes()
+                    self.start_processes()
                 time.sleep(1)
         except KeyboardInterrupt:
             for road in self.roads:
