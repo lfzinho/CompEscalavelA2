@@ -524,7 +524,7 @@ class World:
         
         try:
             while True:
-                new_n_roads = self.road_number_getter.get_number_roads()
+                new_n_roads = int(self.road_number_getter.get_number_roads())
                 if new_n_roads<self.created_roads:
                     self.n_roads = new_n_roads
                     self.delete_roads()
