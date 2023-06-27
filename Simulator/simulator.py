@@ -13,17 +13,18 @@ class Publisher:
         self.redis.publish(message_channel, message_content)
 
 
-class WorldDataReader:
+class RoadNumberGetter:
     def __init__(self):
         self.redis = redis.Redis(
             host = "10.22.160.167",
             port = 6381,
-            db = 0,
+            db = 4,
             password = "1234",
             decode_responses = True
         )
-    def get_number_instances(self):
-        self.redis.get("n_instances")
+    def get_number_roads(self):
+        value = self.redis.get("n_roads")
+        return value
 
 
 WORLD_FILE = "Simulator/world.txt"
@@ -315,10 +316,18 @@ class Road:
 
         self.collision_total = 0
 
+        self.car_min = 100
+        self.car_max = 500
+        self.car_counter = 0
+        self.flag = True
+
         # processes
         self.processes = {}
 
         self.debug_counter = 0
+    
+    def set_flag(self, value):
+        self.flag = value
 
     def path_is_empty(self, lane, length_start, length_end) -> tuple[bool, int]:
         '''
@@ -421,7 +430,7 @@ class Road:
             #mark
             for lane in range(self.lanes_total):
                 # if random.random() < self.car_spawn_prob and plate<2:
-                if random.random() < self.car_spawn_prob and self.road[lane][0] is None:
+                if (random.random() < self.car_spawn_prob) and (self.road[lane][0] is None) and (self.car_counter < self.car_max) and (self.flag):
                     
                     car = Car(self, lane, self.car_speed_min, self.car_speed_max, self.car_acc_min, self.car_acc_max, self.prob_of_changing_lane, self.prob_of_collision, self.collision_countdown, plate)
                     # only creates the car if the car isn't already in the road
@@ -433,12 +442,14 @@ class Road:
                         #process = multiprocessing.Process(target=car.cycle)
                         # self.processes[car.plate] =  process
                         process.start()
+                        self.car_counter += 1
                     break
     
     def delete_car(self, car_pos):
         if self.road[car_pos[0]][car_pos[1]] is not None:
             self.road[car_pos[0]][car_pos[1]].cycle_flag = False
             self.road[car_pos[0]][car_pos[1]] = None
+            self.car_counter -= 1
         
 
 
@@ -449,6 +460,7 @@ class World:
         self.processes = {}
         self.n_roads = 1
         self.created_roads = 0
+        self.road_number_getter = RoadNumberGetter()
 
         self.main()
 
@@ -475,21 +487,21 @@ class World:
     
     def create_all_roads(self):
         with open(WORLD_FILE, 'r', encoding='utf-8') as file:
-            for i in range(self.n_roads):
-                if i==self.created_roads:
-                    # creates attr variable
-                    line = file[i]
-                    attr = line.split(' ')
-                    self.create_road(attr)
+            for i in range(self.created_roads, self.n_roads):
+                # creates attr variable
+                line = file.readlines()[i]
+                attr = line.split(' ')
+                self.create_road(attr)
+                self.created_roads += 1
     
     def create_processes(self):
-        while True:
-            for road in self.roads:
-                road.cycle()
-        # for road in self.roads:
-        #     # process = multiprocessing.Process(target=road.process_print)
-        #     process = multiprocessing.Process(target=road.cycle)
-        #     self.processes[road.name] =  process
+        # while True:
+        #     for road in self.roads:
+        #         road.cycle()
+        for road in self.roads:
+            # process = multiprocessing.Process(target=road.process_print)
+            process = multiprocessing.Process(target=road.cycle)
+            self.processes[road.name] =  process
 
 
     def start_processes(self):
@@ -502,6 +514,10 @@ class World:
             process = self.processes[road.name]
             process.join()
 
+    def delete_roads(self):
+        for i in range(self.created_roads, self.n_roads, -1):
+            self.road[i-1].set_flag(False)
+
     def main(self):
         self.create_all_roads()
         self.create_processes()
@@ -509,11 +525,15 @@ class World:
         
         try:
             while True:
-                if self.world_data_reader.get_number_instances()>self.created_roads:
+                new_n_roads = self.road_number_getter.get_number_roads()
+                if new_n_roads<self.created_roads:
+                    self.n_roads = new_n_roads
+                    self.delete_roads()
+                if new_n_roads>self.created_roads:
                     self.create_all_roads()
                     self.create_processes()
                     self.start_processes()
-                time.sleep(1)
+                time.sleep(5)
         except KeyboardInterrupt:
             for road in self.roads:
                 self.processes[road.name].stop()
