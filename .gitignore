@@ -2,3 +2,4 @@ __pycache__/
 .vscode/
 deprecated/
 mock/
+redis_data.csv
