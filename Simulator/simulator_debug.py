@@ -18,7 +18,7 @@ class WorldDataReader:
         self.redis = redis.Redis(
             host = "10.22.160.167",
             port = 6381,
-            db = 0,
+            db = 4,
             password = "1234",
             decode_responses = True
         )
@@ -513,7 +513,7 @@ class World:
                     self.create_all_roads()
                     self.create_processes()
                     self.start_processes()
-                time.sleep(1)
+                time.sleep(5)
         except KeyboardInterrupt:
             for road in self.roads:
                 self.processes[road.name].stop()
