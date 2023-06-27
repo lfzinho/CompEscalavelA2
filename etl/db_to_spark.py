@@ -10,7 +10,7 @@ from pyspark.sql.functions import sum as spark_sum
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
-T = 3000
+T = 3000 
 
 class Transformer:
 
