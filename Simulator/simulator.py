@@ -8,7 +8,7 @@ import redis
 
 class Publisher:
     def __init__(self):
-        self.redis = redis.Redis(host="10.22.160.187", port=6381, db=0, password="1234", decode_responses=True)
+        self.redis = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
     def send_message(self, message_channel, message_content):
         self.redis.publish(message_channel, message_content)
 
@@ -16,10 +16,9 @@ class Publisher:
 class RoadNumberGetter:
     def __init__(self):
         self.redis = redis.Redis(
-            host = "10.22.160.167",
-            port = 6381,
-            db = 4,
-            password = "1234",
+            host = "localhost",
+            port = 6379,
+            db = 3,
             decode_responses = True
         )
     def get_number_roads(self):
