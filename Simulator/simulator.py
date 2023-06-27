@@ -489,7 +489,7 @@ class World:
         with open(WORLD_FILE, 'r', encoding='utf-8') as file:
             for i in range(self.created_roads, self.n_roads):
                 # creates attr variable
-                line = file.readlines()[i]
+                line = file.readlines()[self.created_roads]
                 attr = line.split(' ')
                 self.create_road(attr)
                 self.created_roads += 1
