@@ -1,13 +1,19 @@
 import multiprocessing
 import threading
 import random
-import string
 import time
 import redis
 
 class Publisher:
     def __init__(self):
-        self.redis = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+        self.redis = redis.Redis(host="compescalavel-redis", port=6379, db=0, decode_responses=True)
+
+        # try connecting to redis
+        try:
+            self.redis.ping()
+        except:
+            self.redis = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+        
     def send_message(self, message_channel, message_content):
         self.redis.publish(message_channel, message_content)
 
@@ -15,11 +21,18 @@ class Publisher:
 class RoadNumberGetter:
     def __init__(self):
         self.redis = redis.Redis(
-            host = "localhost",
+            host = "compescalavel-redis",
             port = 6379,
-            db = 0,
+            db = 1,
             decode_responses = True
         )
+
+        # try connecting to redis
+        try:
+            self.redis.ping()
+        except:
+            self.redis = redis.Redis(host="localhost", port=6379, db=3, decode_responses=True)
+        
     def get_number_roads(self):
         value = self.redis.get("simulator_n_roads")
         if value is None:
@@ -423,14 +436,17 @@ class Road:
         ----""")
 
     def cycle(self):
-        time.sleep(0.001)
+        time.sleep(0.1)
         plate = 0
         self.publisher = Publisher()
         while True:
         # for i in range(1):
             #mark
             for lane in range(self.lanes_total):
-                if (random.random() < self.car_spawn_prob) and (self.road[lane][0] is None) and (self.car_counter < self.car_max) and (self.flag):
+                # if limit is reached, stop creating cars
+                if (self.car_counter > self.car_max):
+                    break
+                if (random.random() < self.car_spawn_prob) and (self.road[lane][0] is None) and (self.flag):
                     
                     car = Car(self, lane, self.car_speed_min, self.car_speed_max, self.car_acc_min, self.car_acc_max, self.prob_of_changing_lane, self.prob_of_collision, self.collision_countdown, plate, self.publisher)
                     # only creates the car if the car isn't already in the road
@@ -441,7 +457,7 @@ class Road:
                         process = threading.Thread(target=car.cycle)
                         process.start()
                         self.car_counter += 1
-                    break
+                time.sleep(0.1)
     
     def delete_car(self, car_pos):
         if self.road[car_pos[0]][car_pos[1]] is not None:

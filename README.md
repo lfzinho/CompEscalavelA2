@@ -9,11 +9,6 @@ Trabalho de computação escalável A2: Projeto de ETL e Dashboard para um siste
  - Vanessa Berwanger Wille
  - Vinicius Hedler
 
-## Dashboard
-
-O que eu quero fazer no dashboard:
-![Dashboard](Dashboard.png)
-
 ## Executando o código localmente
 
 Antes de executar o código localmente, é necessário ter um servidor Redis em execução. Recomenda-se utilizar o Docker e rodar a imagem oficial do Redis na porta 6379. Após configurar o servidor, siga os passos abaixo:

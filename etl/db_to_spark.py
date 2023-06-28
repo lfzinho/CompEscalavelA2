@@ -34,11 +34,17 @@ class Transformer:
         # Get roads' data
         self.roads_data = self.spark.createDataFrame(pandas_df)
         self.dashboard_db = redis.Redis(
-            host='localhost',
+            host='compescalavel-redis',
             port=6379,
             db=1,
             decode_responses = True,
-        )        
+        )    
+        # try connecting to redis
+        try:
+            self.redis.ping()
+        except:
+            self.redis = redis.Redis(host="localhost", port=6379, db=3, decode_responses=True) 
+
 
         self.fined_cars = {}
         # structure: {car_plate: 
@@ -61,7 +67,7 @@ class Transformer:
     def read_data_from_redis(self):
         # connects to redis
         redis_client = redis.Redis(
-            host='localhost',
+            host='redis',
             port=6379,
             db=0,
             decode_responses = True,
@@ -152,10 +158,10 @@ class Transformer:
         if print_log: print("Finished analysis 1")
         self.add_analysis2()
         if print_log: print("Finished analysis 2")
-        self.add_analysis5()
-        if print_log: print("Finished analysis 5")
         self.add_analysis6()
         if print_log: print("Finished analysis 6")
+        self.add_analysis5()
+        if print_log: print("Finished analysis 5")
         self.add_analysis3()
         if print_log: print("Finished analysis 3")
         self.add_analysis4()
@@ -215,10 +221,21 @@ class Transformer:
     def add_analysis5(self):
         # lista veiculos acima limite velocidade
         # Filtra os carros acima do limite de velocidade
-        cars_above_speed_limit = self.df_base.filter(col("speed") > col("speed_limit"))
+        cars_above_speed_limit = self.cars_in_risk_of_collision \
+            .filter(col("speed") > col("speed_limit")) \
+                .drop("prev_length", "prev_speed")
 
         # Agrupa os dados pelo par único de 'car_plate' e 'road_name' e seleciona a primeira linha de cada grupo
-        unique_cars = cars_above_speed_limit.dropDuplicates(['car_plate', 'road_name']).select("time","road_name", "car_plate", "speed", "speed_limit")
+        unique_cars = cars_above_speed_limit \
+            .dropDuplicates(['car_plate', 'road_name']) \
+                .select(
+                    "time",
+                    "road_name", 
+                    "car_plate", 
+                    "speed", 
+                    "speed_limit", 
+                    "collision_risk"
+                )
 
         self.cars_above_speed_limit = unique_cars
         
@@ -228,11 +245,13 @@ class Transformer:
         
         # Envia os dados para o redis
         self.send_to_redis("list_over_speed", unique_cars)
+        unique_cars.show()
         
 
     def add_analysis6(self):
         # lista veiculos risco de colisao
-        CONSTANT_TO_COLISION_RISK = 2
+        CONSTANT_TO_collision_risk = 0.000002   # Constante para o cálculo do risco de colisão
+                                                # A Polícia Rodoviária Federal considera que o risco de colisão é alto quando um carro está a menos de 2 segundos do carro da frente (considerando a velocidade atual do carro, com o carro da frente parado)
 
         # Ordenar o DataFrame por rodovia, faixa e posição
         df_analysis = self.df_base.orderBy("road_name", "car_lane", "car_length")
@@ -248,11 +267,16 @@ class Transformer:
 
         # Calcular o risco de colisão usando a fórmula dada
         df_analysis = df_analysis.withColumn(
-            "colision_risk", 
+            "collision_risk", 
             expr(
-                f"(car_length + {CONSTANT_TO_COLISION_RISK} * speed) >= prev_speed"
+                f"(car_length + {CONSTANT_TO_collision_risk} * speed) >= prev_speed"
         ))
+        
+        # Salva o resultado parcial para ser usado na análise 5
         self.cars_in_risk_of_collision = df_analysis
+        
+        # Filtra os carros em risco de colisão
+        df_analysis = df_analysis.filter(col("collision_risk") == True).drop("prev_length", "prev_speed")
 
         # Coleta o tempo gasto e envia para o dashboard
         min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
@@ -381,5 +405,7 @@ if __name__ == "__main__":
             print("No data to transform")
         else:
             t.base_transform()
-            t.individual_analysis()
-            t.historical_analysis()
+            # t.individual_analysis()
+            # t.historical_analysis()
+            t.add_analysis6()
+            t.add_analysis5()

@@ -19,7 +19,7 @@ hist_n_collisions_risk = []
 
 # ===== Redis =====
 r = redis.Redis(
-    host='localhost',
+    host='redis',
     port=6379,
     db=1,
     decode_responses = True
