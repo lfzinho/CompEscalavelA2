@@ -198,6 +198,8 @@ class Transformer:
         # Agrupa os dados pelo par único de 'car_plate' e 'road_name' e seleciona a primeira linha de cada grupo
         unique_cars = cars_above_speed_limit.dropDuplicates(['car_plate', 'road_name']).select("time","road_name", "car_plate", "speed", "speed_limit")
 
+        self.cars_above_speed_limit = unique_cars
+        
         # Coleta o tempo gasto e envia para o dashboard
         min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
         self.dashboard_db.set("time_list_over_speed", min_time)
@@ -227,6 +229,7 @@ class Transformer:
             expr(
                 f"(car_length + {CONSTANT_TO_COLISION_RISK} * speed) >= prev_speed"
         ))
+        self.cars_in_risk_of_collision = df_analysis
 
         # Coleta o tempo gasto e envia para o dashboard
         min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
