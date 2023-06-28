@@ -122,32 +122,39 @@ class Transformer:
         df = df.withColumn("prev_prev_length", lag("car_length", 2).over(windowSpec))
 
         # Calculates the speed
-        speeds = df.withColumn("speed", (df["car_length"] - df["prev_length"]) / (df["time"] - df["prev_time"] + 0.1))
-        speeds = speeds.select("time", "speed")
+        df = df.withColumn(
+            "speed", 
+            (df["car_length"] - df["prev_length"]) / (df["time"] - df["prev_time"] + 0.1),  
+        )
 
         # Calculates the acceleration
-        accs = df.withColumn("acceleration", (df["car_length"] - 2 * df["prev_length"] + df["prev_prev_length"]) / ((df["time"] - df["prev_time"] + 0.1) * (df["time"] - df["prev_time"] + 0.1)))
-        accs = accs.select("time", "acceleration")
+        df = df.withColumn(
+            "acceleration", 
+            (df["car_length"] - 2 * df["prev_length"] + df["prev_prev_length"]) / ((df["time"] - df["prev_time"] + 0.1) * (df["time"] - df["prev_time"] + 0.1))
+        )
 
         # Calculates the change of lane
-        lane_changes = df.select("time", (col("car_lane") == col("prev_lane")).alias("lane_change"))
-        # lane_changes = lane_changes.select("time", "lane_change")
+        df = df.select("time", "road_name", "car_lane", "car_length", "car_plate", "acceleration", "speed", (col("car_lane") == col("prev_lane")).alias("lane_change"))
 
         # Joins the dataframes and save it to class variable
-        self.df_base = df.join(speeds, "time", "outer") \
-            .join(accs, "time", "outer") \
-            .join(lane_changes, "time", "outer")
+        self.df_base = df
         
         print("Base transform done")
 
 
-    def individual_analysis(self):
+    def individual_analysis(self, print_data=False):
         self.add_analysis1()
+        print("Analysis 1 done")
         self.add_analysis2()
+        print("Analysis 2 done")
         self.add_analysis5()
+        print("Analysis 5 done")
         self.add_analysis6()
+        print("Analysis 6 done")
         self.add_analysis3()
+        print("Analysis 3 done")
         self.add_analysis4()
+        print("Analysis 4 done")
 
 
     def add_analysis1(self):
@@ -192,12 +199,13 @@ class Transformer:
         # n veiculos acima velocidade limite
         self.number_of_cars_above_speed_limit = self.cars_above_speed_limit.count()
         
+        # Envia os dados da análise para o dashboard
+        self.dashboard_db.set("n_over_speed", self.number_of_cars_above_speed_limit)
+        
         # Coleta o tempo gasto e envia para o dashboard
         min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
         self.dashboard_db.set("time_n_over_speed", min_time)
         
-        # Envia os dados da análise para o dashboard
-        self.send_to_redis("n_over_speed", self.number_of_cars_above_speed_limit)
 
     def add_analysis5(self):
         # lista veiculos acima limite velocidade
@@ -248,17 +256,20 @@ class Transformer:
         # Envia os dados para o dashboard
         self.send_to_redis("list_collisions_risk", df_analysis)
 
-    def historical_analysis(self):
+    def historical_analysis(self, print_results=False):
         self.add_analysis7()
+        print("Análise 7 finalizada")
         self.add_analysis8()
+        print("Análise 8 finalizada")
         self.add_analysis9()
+        print("Análise 9 finalizada")
 
     def add_analysis7(self):
         # ranking top 100 veiculos
         df_top = self.df.groupBy("car_plate")
         df_top = df_top.agg(countDistinct("road_name"))
         df_top = df_top.sort(df_top['count(road_name)'].desc())
-        df_top = df_top.head(100)
+        df_top = df_top.limit(100)
     
         # Coleta o tempo gasto e envia para o dashboard
         min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
@@ -308,8 +319,8 @@ class Transformer:
         df_complete = self.df_base.join(self.roads_data, "road_name")
         self.road_stats = df_complete.groupBy("road_name", "time").agg(
             avg("speed").alias("mean_speed"),
-            count(when(df_complete.speed == 0, True)).alias("n_accidents"),
-            (avg("road_length") / avg("speed")).alias("avg_traversal_time")
+            count(when(df_complete["speed"] == 0, True)).alias("n_accidents"),
+            (avg("length") / avg("speed")).alias("avg_traversal_time")
         )
         
         # Coleta o tempo gasto e envia para o dashboard
@@ -358,5 +369,5 @@ if __name__ == "__main__":
         print("No data to transform")
     else:
         t.base_transform()
-        t.individual_analysis()
-        t.historical_analysis()
+        t.individual_analysis(True)
+        t.historical_analysis(True)
