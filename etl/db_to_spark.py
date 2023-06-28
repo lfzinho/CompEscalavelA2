@@ -375,7 +375,7 @@ if __name__ == "__main__":
         if t.get_df() == 0:
             print("No data to transform")
         else:
-            # t.base_transform()
-            # t.individual_analysis()
-            # t.historical_analysis()
-            t.add_analysis10()
+            t.base_transform()
+            t.individual_analysis()
+            t.historical_analysis()
+            # t.add_analysis10()
