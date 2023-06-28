@@ -1,7 +1,6 @@
 import multiprocessing
 import threading
 import random
-from dataclasses import dataclass
 import string
 import time
 import redis
@@ -13,17 +12,31 @@ class Publisher:
         self.redis.publish(message_channel, message_content)
 
 
+# class RoadNumberGetter:
+#     def __init__(self):
+#         self.redis = redis.Redis(
+#             host = "localhost",
+#             port = 6379,
+#             db = 3,
+#             decode_responses = True
+#         )
+#     def get_number_roads(self):
+#         value = self.redis.get("simulator_n_roads")
+#         if value is None:
+#             value = 1
+#         return value
+
+class Publisher:
+    def __init__(self):
+        pass
+    def send_message(self, message_channel, message_content):
+        pass
+
 class RoadNumberGetter:
     def __init__(self):
-        self.redis = redis.Redis(
-            host = "localhost",
-            port = 6379,
-            db = 3,
-            decode_responses = True
-        )
+        pass
     def get_number_roads(self):
-        value = self.redis.get("simulator_n_roads")
-        return value
+        return 10
 
 
 WORLD_FILE = "Simulator/world.txt"
@@ -68,7 +81,7 @@ def model_from_plate(plate):
     return keys[i]
 
 class Car:
-    def __init__(self, road: 'Road', lane: int, speed_min: int, speed_max:int, acceleration_min:int, acceleration_max:int, lane_change_prob, collision_risk: float, collision_countdown, plate_counter):
+    def __init__(self, road: 'Road', lane: int, speed_min: int, speed_max:int, acceleration_min:int, acceleration_max:int, lane_change_prob, collision_risk: float, collision_countdown, plate_counter, publisher):
         # Road
         self.road = road
 
@@ -92,7 +105,7 @@ class Car:
 
         self.plate_counter = plate_counter
 
-        self.publisher = Publisher()
+        self.publisher = publisher
     
     @property
     def pos(self):
@@ -294,7 +307,7 @@ class Car:
 
 class Road:
     
-    def __init__(self, name, lanes_f, lanes_b, length, speed_limit, prob_of_new_car, prob_of_changing_lane, prob_of_collision, car_speed_min, car_speed_max, car_acc_min, car_acc_max, collision_fix_time):
+    def __init__(self, name, lanes_f, lanes_b, length, speed_limit, prob_of_new_car, prob_of_changing_lane, prob_of_collision, car_speed_min, car_speed_max, car_acc_min, car_acc_max, collision_fix_time, publisher):
 
         # Road parameters
         self.name = name
@@ -319,6 +332,7 @@ class Road:
         self.car_max = 500
         self.car_counter = 0
         self.flag = True
+        self.publisher = publisher
 
         # processes
         self.processes = {}
@@ -424,14 +438,14 @@ class Road:
     def cycle(self):
         time.sleep(0.001)
         plate = 0
-        # while True:
-        for i in range(1):
+        while True:
+        # for i in range(1):
             #mark
             for lane in range(self.lanes_total):
                 # if random.random() < self.car_spawn_prob and plate<2:
                 if (random.random() < self.car_spawn_prob) and (self.road[lane][0] is None) and (self.car_counter < self.car_max) and (self.flag):
                     
-                    car = Car(self, lane, self.car_speed_min, self.car_speed_max, self.car_acc_min, self.car_acc_max, self.prob_of_changing_lane, self.prob_of_collision, self.collision_countdown, plate)
+                    car = Car(self, lane, self.car_speed_min, self.car_speed_max, self.car_acc_min, self.car_acc_max, self.prob_of_changing_lane, self.prob_of_collision, self.collision_countdown, plate, self.publisher)
                     # only creates the car if the car isn't already in the road
                     plate += 1
                     if not car.plate in self.processes:
@@ -460,6 +474,7 @@ class World:
         self.n_roads = 1
         self.created_roads = 0
         self.road_number_getter = RoadNumberGetter()
+        self.publisher = Publisher()
 
         self.main()
 
@@ -479,34 +494,37 @@ class World:
         collision_fix_time = int(attr[12])
 
         # create road
-        road = Road(name, lanes_f, lanes_b, length, speed_limit, prob_of_new_car, prob_of_changing_lane, prob_of_collision, car_speed_min, car_speed_max, car_acc_min, car_acc_max, collision_fix_time)
+        road = Road(name, lanes_f, lanes_b, length, speed_limit, prob_of_new_car, prob_of_changing_lane, prob_of_collision, car_speed_min, car_speed_max, car_acc_min, car_acc_max, collision_fix_time, self.publisher)
         
         self.roads.append(road)
         
     
     def create_all_roads(self):
         with open(WORLD_FILE, 'r', encoding='utf-8') as file:
-            for i in range(self.created_roads, self.n_roads):
+            lines = file.readlines()
+            for _ in range(self.created_roads, self.n_roads):
+                l = lines[self.created_roads]
                 # creates attr variable
-                line = file.readlines()[self.created_roads]
-                attr = line.split(' ')
+                attr = l.split(' ')
                 self.create_road(attr)
                 self.created_roads += 1
     
     def create_processes(self):
-        # while True:
-        #     for road in self.roads:
-        #         road.cycle()
-        for road in self.roads:
-            # process = multiprocessing.Process(target=road.process_print)
-            process = multiprocessing.Process(target=road.cycle)
-            self.processes[road.name] =  process
+        while True:
+            for road in self.roads:
+                road.cycle()
+        # for road in self.roads:
+        #     # process = multiprocessing.Process(target=road.process_print)
+        #     process = multiprocessing.Process(target=road.cycle)
+        #     self.processes[road.name] =  process
 
 
     def start_processes(self):
         for road in self.roads:
             process = self.processes[road.name]
+            print("ATE AQUI CHEGOU")
             process.start()
+            print("ATE AQUI NAO")
 
     def join_processes(self):
         for road in self.roads:
@@ -514,12 +532,13 @@ class World:
             process.join()
 
     def delete_roads(self):
-        for i in range(self.created_roads, self.n_roads, -1):
-            self.road[i-1].set_flag(False)
+        for r in self.roads:
+            r.set_flag(False)
 
     def main(self):
         self.create_all_roads()
         self.create_processes()
+        print(self.processes)
         self.start_processes()
         
         try:
@@ -529,15 +548,17 @@ class World:
                     self.n_roads = new_n_roads
                     self.delete_roads()
                 if new_n_roads>self.created_roads:
+                    self.n_roads = new_n_roads
                     self.create_all_roads()
                     self.create_processes()
                     self.start_processes()
                 time.sleep(5)
         except KeyboardInterrupt:
-            for road in self.roads:
-                self.processes[road.name].stop()
+            self.delete_roads()
+            self.join_processes()
+            # for road in self.roads:
+            #     self.processes[road.name].stop()
 
-        self.join_processes()
 
 
 if __name__ == '__main__':
