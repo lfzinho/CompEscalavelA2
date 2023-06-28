@@ -6,6 +6,5 @@ faker
 faker-vehicle
 dash
 dash-bootstrap-components
-multiprocessing
 dataclasses
 pyspark
