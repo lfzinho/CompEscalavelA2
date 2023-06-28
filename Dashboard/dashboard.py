@@ -134,7 +134,9 @@ app.layout = html.Div([
 
                     dash_table.DataTable(
                         id='table_over_speed',
-                        columns=[{"name": i, "id": i} for i in ['Placa', 'Velocidade', 'Risco de colisão']],
+                        columns = [{"name": 'Placa', 'id': 'car_plate'},
+                                    {"name": 'Velocidade', 'id': 'speed'},
+                                    {"name": 'Risco de colisão', 'id': 'risk'}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -168,7 +170,8 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_collisions_risk',
-                        columns=[{"name": i, "id": i} for i in ['Placa', 'Velocidade']],
+                        columns=[{"name": "Placa", "id": "car_plate"},
+                                {"name": "Velocidade", "id": "speed"}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -204,7 +207,7 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_banned_cars',
-                        columns=[{"name": i, "id": i} for i in ['Placa']],
+                        columns=[{"name": "Placa", "id": "car_plate"}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -238,7 +241,7 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_dangerous_cars',
-                        columns=[{"name": i, "id": i} for i in ['Placa']],
+                        columns=[{"name": "Placa", "id": "car_plate"}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -274,7 +277,8 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_top_100',
-                        columns=[{"name": i, "id": i} for i in ['Placa', 'Número de rodovias']], # não precisa ter esse número de rodivia, a posição no ranking jé é suficiente
+                        columns=[{"name": "Placa", "id": "car_plate"},
+                                {"name": "Número de rodovias", "id": "n_roads"}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -310,7 +314,10 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_roads',
-                        columns=[{"name": i, "id": i} for i in ['Rodovia', 'Velocidade média dos carros', 'Tempo médio de travessia', 'Número de acidentes']],
+                        columns=[{"name": "Rodovia", "id": "road_name"},
+                                {"name": "Velocidade média dos carros", "id": "mean_speed"},
+                                {"name": "Tempo médio de travessia", "id": "avg_traversal_time"},
+                                {"name": "Número de acidentes", "id": "n_accidents"}],   
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
