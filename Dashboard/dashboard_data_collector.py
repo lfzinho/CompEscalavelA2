@@ -195,6 +195,7 @@ def get_list_dangerous_cars():
         result = r.get('list_dangerous_cars')
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
+        result = result[result['dangerous_driving'] == 1]
         result.head(5)
         time_event = r.get('time_list_dangerous_cars')
         if time_event is not None:

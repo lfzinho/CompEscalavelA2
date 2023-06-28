@@ -136,7 +136,7 @@ app.layout = html.Div([
                         id='table_over_speed',
                         columns = [{"name": 'Placa', 'id': 'car_plate'},
                                     {"name": 'Velocidade', 'id': 'speed'},
-                                    {"name": 'Risco de colisão', 'id': 'risk'}],
+                                    {"name": 'Risco de colisão', 'id': 'colision_risk'}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
