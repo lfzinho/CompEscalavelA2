@@ -12,31 +12,31 @@ class Publisher:
         self.redis.publish(message_channel, message_content)
 
 
-# class RoadNumberGetter:
-#     def __init__(self):
-#         self.redis = redis.Redis(
-#             host = "localhost",
-#             port = 6379,
-#             db = 3,
-#             decode_responses = True
-#         )
-#     def get_number_roads(self):
-#         value = self.redis.get("simulator_n_roads")
-#         if value is None:
-#             value = 1
-#         return value
-
-class Publisher:
-    def __init__(self):
-        pass
-    def send_message(self, message_channel, message_content):
-        pass
-
 class RoadNumberGetter:
     def __init__(self):
-        pass
+        self.redis = redis.Redis(
+            host = "localhost",
+            port = 6379,
+            db = 3,
+            decode_responses = True
+        )
     def get_number_roads(self):
-        return 10
+        value = self.redis.get("simulator_n_roads")
+        if value is None:
+            value = 1
+        return value
+
+# class Publisher:
+#     def __init__(self):
+#         pass
+#     def send_message(self, message_channel, message_content):
+#         pass
+
+# class RoadNumberGetter:
+#     def __init__(self):
+#         pass
+#     def get_number_roads(self):
+#         return 10
 
 
 WORLD_FILE = "Simulator/world.txt"
