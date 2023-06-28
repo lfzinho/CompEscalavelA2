@@ -295,7 +295,7 @@ class Car:
 
 class Road:
     
-    def __init__(self, name, lanes_f, lanes_b, length, speed_limit, prob_of_new_car, prob_of_changing_lane, prob_of_collision, car_speed_min, car_speed_max, car_acc_min, car_acc_max, collision_fix_time, publisher):
+    def __init__(self, name, lanes_f, lanes_b, length, speed_limit, prob_of_new_car, prob_of_changing_lane, prob_of_collision, car_speed_min, car_speed_max, car_acc_min, car_acc_max, collision_fix_time):
 
         # Road parameters
         self.name = name
@@ -320,7 +320,6 @@ class Road:
         self.car_max = 500
         self.car_counter = 0
         self.flag = True
-        self.publisher = publisher
 
         # processes
         self.processes = {}
@@ -426,6 +425,7 @@ class Road:
     def cycle(self):
         time.sleep(0.001)
         plate = 0
+        self.publisher = Publisher()
         while True:
         # for i in range(1):
             #mark
@@ -459,7 +459,6 @@ class World:
         self.n_roads = 1
         self.created_roads = 0
         self.road_number_getter = RoadNumberGetter()
-        self.publisher = Publisher()
 
         self.main()
 
@@ -479,7 +478,7 @@ class World:
         collision_fix_time = int(attr[12])
 
         # create road
-        road = Road(name, lanes_f, lanes_b, length, speed_limit, prob_of_new_car, prob_of_changing_lane, prob_of_collision, car_speed_min, car_speed_max, car_acc_min, car_acc_max, collision_fix_time, self.publisher)
+        road = Road(name, lanes_f, lanes_b, length, speed_limit, prob_of_new_car, prob_of_changing_lane, prob_of_collision, car_speed_min, car_speed_max, car_acc_min, car_acc_max, collision_fix_time)
         
         self.roads.append(road)
         
