@@ -461,4 +461,4 @@ def update_simulator_n_roads(n):
 
 # ===== Main =====
 if __name__ == '__main__':
-    app.run_server(debug=DEBUG, port=8051)
+    app.run(debug=DEBUG, host="0.0.0.0", port=8051)
