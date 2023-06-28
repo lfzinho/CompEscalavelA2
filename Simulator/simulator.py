@@ -450,7 +450,6 @@ class Road:
             self.car_counter -= 1
         
 
-
 class World:
     
     def __init__(self):
@@ -505,9 +504,7 @@ class World:
     def start_processes(self):
         for road in self.roads:
             process = self.processes[road.name]
-            print("ATE AQUI CHEGOU")
             process.start()
-            print("ATE AQUI NAO")
 
     def join_processes(self):
         for road in self.roads:
@@ -533,7 +530,6 @@ class World:
             self.join_processes()
             # for road in self.roads:
             #     self.processes[road.name].stop()
-
 
 
 if __name__ == '__main__':

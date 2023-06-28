@@ -9,7 +9,7 @@ from io import StringIO
 import string 
 
 # ===== Constants =====
-DEBUG = True
+DEBUG = False
 HIST_LIMIT = 1024
 
 # ===== Data =====
