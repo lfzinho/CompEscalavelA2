@@ -8,7 +8,7 @@ class Subscriber:
         self.redis = redis.Redis(
             host='localhost',
             port=6379,
-            db=1,
+            db=0,
             decode_responses = True,
         )
         self.redis.flushdb()

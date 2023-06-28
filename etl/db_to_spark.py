@@ -36,7 +36,7 @@ class Transformer:
         self.dashboard_db = redis.Redis(
             host='localhost',
             port=6379,
-            db=3,
+            db=1,
             decode_responses = True,
         )        
 
