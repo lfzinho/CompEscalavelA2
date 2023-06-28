@@ -75,7 +75,7 @@ class Transformer:
             value = redis_client.get(key)
             data.append((key, value))
 
-        print(f"Read {len(data)} data from redis")
+        # print(f"Read {len(data)} data from redis")
         return data
 
     def get_df(self):
@@ -144,22 +144,22 @@ class Transformer:
         # Joins the dataframes and save it to class variable
         self.df_base = df
         
-        print("Base transform done")
+        # print("Base transform done")
 
 
-    def individual_analysis(self, print_data=False):
+    def individual_analysis(self, print_log=False):
         self.add_analysis1()
-        print("Finished analysis 1")
+        if print_log: print("Finished analysis 1")
         self.add_analysis2()
-        print("Finished analysis 2")
+        if print_log: print("Finished analysis 2")
         self.add_analysis5()
-        print("Finished analysis 5")
+        if print_log: print("Finished analysis 5")
         self.add_analysis6()
-        print("Finished analysis 6")
+        if print_log: print("Finished analysis 6")
         self.add_analysis3()
-        print("Finished analysis 3")
+        if print_log: print("Finished analysis 3")
         self.add_analysis4()
-        print("Finished analysis 4")
+        if print_log: print("Finished analysis 4")
 
 
     def add_analysis1(self):
@@ -261,21 +261,21 @@ class Transformer:
         # Envia os dados para o dashboard
         self.send_to_redis("list_collisions_risk", df_analysis)
 
-    def historical_analysis(self, print_results=False):
+    def historical_analysis(self, print_log=False):
         self.add_analysis7()
-        print("Finished analysis 7")
+        if print_log: print("Finished analysis 7")
         self.add_analysis8()
-        print("Finished analysis 8")
+        if print_log: print("Finished analysis 8")
         self.add_analysis9()
-        print("Finished analysis 9")
+        if print_log: print("Finished analysis 9")
         # self.add_analysis10()
-        print("Finished analysis 10")
+        if print_log: print("Finished analysis 10")
 
     def add_analysis7(self):
         # ranking top 100 veiculos
         df_top = self.df.groupBy("car_plate")
-        df_top = df_top.agg(countDistinct("road_name"))
-        df_top = df_top.sort(df_top['count(road_name)'].desc())
+        df_top = df_top.agg(countDistinct("road_name").alias("n_roads"))
+        df_top = df_top.sort(df_top['n_roads'].desc())
         df_top = df_top.limit(100)
     
         # Coleta o tempo gasto e envia para o dashboard
@@ -345,29 +345,34 @@ class Transformer:
         n = 6
 
         # Define o intervalo de tempo i
-        risk_i_window = Window.partitionBy('car_plate').orderBy('time')#.rangeBetween(-i, -1)
+        # risk_i_window = Window.partitionBy('car_plate').orderBy('time')#.rangeBetween(-i, -1)
+        t = time.time() - t
+        df_t = self.df_base.filter(col('time') > t)
         
-        # Cria a coluna contadora de risco
-        df = self.df_base.withColumn('risk_counter', when(col('speed') > safe_speed, 1).otherwise(0) +
-            when(col('acceleration') > safe_acc, 1).otherwise(0) +
-            when((col('lane_change') == 1) & (lag('lane_change').over(risk_i_window) == 1), 1).otherwise(0)
-        )
+        from pyspark.sql.functions import max, when
 
-        # Define o perido de tempo t
-        dangerous_driving_window = Window.partitionBy('car_plate').orderBy('time').rangeBetween(-t, -1)
+        # Define o período de tempo i
+        dangerous_driving_window = Window.partitionBy('car_plate').orderBy('time').rangeBetween(-i, -1)
+
+        # Cria a coluna contadora de risco
+        df = df_t.withColumn('risk_counter', 
+                            when(col('speed') > safe_speed, 1).otherwise(0) +
+                            when(col('acceleration') > safe_acc, 1).otherwise(0) +
+                            when((col('lane_change') == 1) & (max(when(col('lane_change') == 1, 1)).over(dangerous_driving_window) == 1), 1).otherwise(0)
+                            )
 
         # Calcula a coluna de risco sobre o intervalo
-        df = df.withColumn('risk_i', spark_sum('risk_counter').over(risk_i_window))
+        df = df.withColumn('risk_i', spark_sum('risk_counter').over(dangerous_driving_window))
 
         # Calcula a coluna de direcao perigosa
-        df = df.withColumn('dangerous_driving', when(col('risk_i') >= n, True).otherwise(False).over(dangerous_driving_window))
+        df = df.withColumn('dangerous_driving', when(col('risk_i') >= n, True).otherwise(False))
         
         # Coleta o tempo gasto e envia para o dashboard
         min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_list_dangerous_cars", min_time)
         
         # Envia os dados para o dashboard
-        self.send_to_redis("list_dangerous_cars", self.df_risk)
+        self.send_to_redis("list_dangerous_cars", df)
 
 if __name__ == "__main__":
     t = Transformer()
@@ -378,4 +383,3 @@ if __name__ == "__main__":
             t.base_transform()
             t.individual_analysis()
             t.historical_analysis()
-            # t.add_analysis10()
