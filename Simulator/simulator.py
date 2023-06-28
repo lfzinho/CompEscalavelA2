@@ -23,7 +23,7 @@ class RoadNumberGetter:
         self.redis = redis.Redis(
             host = "compescalavel-redis",
             port = 6379,
-            db = 3,
+            db = 1,
             decode_responses = True
         )
 
@@ -297,7 +297,7 @@ class Car:
         #     "datetime" : time.time(),
         #     "road": self.road.name,
         # }
-        message = f"{time.time()},{self.road.name},{self.plate},{self.pos[0]},{self.pos[1]}"
+        message = f"{time.time()},{self.road.name},{self.plate},{self.pos[0]},{self.pos[1]},{self.road.length},{self.road.speed_limit}"
         self.publisher.send_message("veiculo", message)
         print(f"Road: {self.road.name} Plate: {self.plate} Pos:{self.pos}")
     

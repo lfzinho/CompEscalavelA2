@@ -8,7 +8,7 @@ class Subscriber:
         self.redis = redis.Redis(
             host='compescalavel-redis',
             port=6379,
-            db=1,
+            db=0,
             decode_responses = True,
         )
         # try connecting to redis
@@ -31,7 +31,7 @@ class Subscriber:
                         print(message)
                     data = message['data'].split(",")
                     key = f"{data[0]} {data[2]}"
-                    value = f"{data[1]} {data[3]} {data[4]}"
+                    value = f"{data[1]} {data[3]} {data[4]} {data[5]} {data[6]}"
                     self.redis.set(key, value)
             except ConnectionError:
                 # start again when connection times out
