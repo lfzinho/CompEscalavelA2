@@ -20,9 +20,19 @@ class Transformer:
         self.spark =  SparkSession.builder \
             .appName("RedisSparkIntegration") \
             .getOrCreate()
+            
+        column_names = ['road_name', 'lanes_f', 'lanes_b', 'length', 'speed_limit', 'prob_of_new_car', 'prob_of_changing_lane', 'prob_of_collision', 'car_speed_min', 'car_speed_max', 'car_acc_min', 'car_acc_max', 'collision_fix_time']
+
+        # Cria um DataFrame do Pandas
+        pandas_df = pd.read_csv('./Simulator/world.txt', sep=" ", header=None, names=column_names)
+
+        # Converte o datatype das colunas para int
+        colums_to_convert = pandas_df.columns[1:]
+        for column_name in colums_to_convert:
+            pandas_df[column_name] = pandas_df[column_name].astype(int)
         
         # Get roads' data
-        self.roads_data = self.spark.read.csv('./Simulator/world.txt', sep=" ", header=False)
+        self.roads_data = self.spark.createDataFrame(pandas_df)
         self.dashboard_db = redis.Redis(
             host='localhost',
             port=6379,
