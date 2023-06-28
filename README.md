@@ -8,8 +8,3 @@ Trabalho de computação escalável A2: Projeto de ETL e Dashboard para um siste
  - Luis Fernando Laguardia
  - Vanessa Berwanger Wille
  - Vinicius Hedler
-
-## Dashboard
-
-O que eu quero fazer no dashboard:
-![Dashboard](Dashboard.png)

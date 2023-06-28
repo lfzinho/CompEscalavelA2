@@ -34,11 +34,17 @@ class Transformer:
         # Get roads' data
         self.roads_data = self.spark.createDataFrame(pandas_df)
         self.dashboard_db = redis.Redis(
-            host='localhost',
+            host='compescalavel-redis',
             port=6379,
             db=3,
             decode_responses = True,
-        )        
+        )    
+        # try connecting to redis
+        try:
+            self.redis.ping()
+        except:
+            self.redis = redis.Redis(host="localhost", port=6379, db=3, decode_responses=True) 
+
 
         self.fined_cars = {}
         # structure: {car_plate: 
@@ -61,7 +67,7 @@ class Transformer:
     def read_data_from_redis(self):
         # connects to redis
         redis_client = redis.Redis(
-            host='localhost',
+            host='redis',
             port=6379,
             db=1,
             decode_responses = True,

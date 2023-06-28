@@ -1,15 +1,11 @@
 from dash import Dash, dash_table, dcc, html, Input, Output, State, callback
 import dash_bootstrap_components as dbc
 
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
 import dashboard_data_collector as ddc
 import time
 
 # ===== Constants =====
-DEBUG = True
+DEBUG = False
 GRAPH_UPDATE_INTERVAL = 1000 # ms
 NUMROADS_UPDATE_INTERVAL = 1000 # ms
 NUMCARS_UPDATE_INTERVAL = 500 # ms
@@ -407,7 +403,6 @@ def update_table(n_intervals):
     value = value.to_dict('records')
     if event_time == None: return value, 0
     return value, round(time.time() - event_time)
-
 
 @app.callback(
     [Output('table_list_banned_cars', 'data'),

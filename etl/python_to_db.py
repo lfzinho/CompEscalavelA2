@@ -6,18 +6,23 @@ class Subscriber:
     def __init__(self):
         self.debug = True
         self.redis = redis.Redis(
-            host='localhost',
+            host='compescalavel-redis',
             port=6379,
             db=1,
             decode_responses = True,
         )
+        # try connecting to redis
+        try:
+            self.redis.ping()
+        except:
+            self.redis = redis.Redis(host="localhost", port=6379, db=1, decode_responses=True)
+        
         self.redis.flushdb()
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe("veiculo")
 
-    def listen_and_save(self, n):
-        bar = n
-        while n>0:
+    def listen_and_save(self):
+        while True:
             try:
                 for message in self.pubsub.listen():
                     if message["type"] != "message":
@@ -28,14 +33,9 @@ class Subscriber:
                     key = f"{data[0]} {data[2]}"
                     value = f"{data[1]} {data[3]} {data[4]}"
                     self.redis.set(key, value)
-                    n -= 1
-                    if (bar-n)%(n+1/100)<2:
-                        print(f"{1-n/bar} complete...", end="\r")
-                    if n<=0:
-                        break
             except ConnectionError:
                 # start again when connection times out
                 pass
 
 s = Subscriber()
-s.listen_and_save(10000)
+s.listen_and_save()
