@@ -19,7 +19,7 @@ hist_n_collisions_risk = []
 
 # ===== Redis =====
 r = redis.Redis(
-    host='localhost',
+    host='redis',
     port=6379,
     db=1,
     decode_responses = True
@@ -120,6 +120,7 @@ def get_list_over_speed():
         
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
+        result = result.head(5)
         time_event = r.get('time_list_over_speed')
         if time_event is not None:
             time_event = float(time_event)
@@ -144,6 +145,8 @@ def get_list_collisions_risk():
         result = r.get('list_collisions_risk')
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
+        result = result[result['colision_risk'] == 1]
+        result = result.head(5)
         time_event = r.get('time_list_collisions_risk')
         if time_event is not None:
             time_event = float(time_event)
@@ -168,6 +171,7 @@ def get_list_banned_cars():
         
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
+        result.head(5)
         time_event = r.get('time_list_banned_cars')
         if time_event is not None:
             time_event = float(time_event)
@@ -189,9 +193,10 @@ def get_list_dangerous_cars():
         time_event = time.time()
     else:
         result = r.get('list_dangerous_cars')
-        
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
+        result = result[result['dangerous_driving'] == 1]
+        result.head(5)
         time_event = r.get('time_list_dangerous_cars')
         if time_event is not None:
             time_event = float(time_event)
@@ -246,6 +251,7 @@ def get_list_roads():
         
         if result is None: return (0, pd.DataFrame())
         result = pd.read_csv(StringIO(result))
+        result = result.head(5)
         time_event = r.get('time_list_roads')
         if time_event is not None:
             time_event = float(time_event)

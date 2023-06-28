@@ -1,15 +1,11 @@
 from dash import Dash, dash_table, dcc, html, Input, Output, State, callback
 import dash_bootstrap_components as dbc
 
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
 import dashboard_data_collector as ddc
 import time
 
 # ===== Constants =====
-DEBUG = True
+DEBUG = False
 GRAPH_UPDATE_INTERVAL = 1000 # ms
 NUMROADS_UPDATE_INTERVAL = 1000 # ms
 NUMCARS_UPDATE_INTERVAL = 500 # ms
@@ -138,7 +134,9 @@ app.layout = html.Div([
 
                     dash_table.DataTable(
                         id='table_over_speed',
-                        columns=[{"name": i, "id": i} for i in ['Placa', 'Velocidade', 'Risco de colisão']],
+                        columns = [{"name": 'Placa', 'id': 'car_plate'},
+                                    {"name": 'Velocidade', 'id': 'speed'},
+                                    {"name": 'Risco de colisão', 'id': 'colision_risk'}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -172,7 +170,8 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_collisions_risk',
-                        columns=[{"name": i, "id": i} for i in ['Placa', 'Velocidade']],
+                        columns=[{"name": "Placa", "id": "car_plate"},
+                                {"name": "Velocidade", "id": "speed"}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -208,7 +207,7 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_banned_cars',
-                        columns=[{"name": i, "id": i} for i in ['Placa']],
+                        columns=[{"name": "Placa", "id": "car_plate"}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -242,7 +241,7 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_dangerous_cars',
-                        columns=[{"name": i, "id": i} for i in ['Placa']],
+                        columns=[{"name": "Placa", "id": "car_plate"}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -278,7 +277,8 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_top_100',
-                        columns=[{"name": i, "id": i} for i in ['Placa', 'Número de rodovias']], # não precisa ter esse número de rodivia, a posição no ranking jé é suficiente
+                        columns=[{"name": "Placa", "id": "car_plate"},
+                                {"name": "Número de rodovias", "id": "n_roads"}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -314,7 +314,10 @@ app.layout = html.Div([
                     # Table
                     dash_table.DataTable(
                         id='table_list_roads',
-                        columns=[{"name": i, "id": i} for i in ['Rodovia', 'Velocidade média dos carros', 'Tempo médio de travessia', 'Número de acidentes']],
+                        columns=[{"name": "Rodovia", "id": "road_name"},
+                                {"name": "Velocidade média dos carros", "id": "mean_speed"},
+                                {"name": "Tempo médio de travessia", "id": "avg_traversal_time"},
+                                {"name": "Número de acidentes", "id": "n_accidents"}],   
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -408,7 +411,6 @@ def update_table(n_intervals):
     if event_time == None: return value, 0
     return value, round(time.time() - event_time)
 
-
 @app.callback(
     [Output('table_list_banned_cars', 'data'),
     Output('numListBannedCars', 'children')],
@@ -459,4 +461,4 @@ def update_simulator_n_roads(n):
 
 # ===== Main =====
 if __name__ == '__main__':
-    app.run_server(debug=DEBUG, port=8051)
+    app.run(debug=DEBUG, host="0.0.0.0", port=8051)
