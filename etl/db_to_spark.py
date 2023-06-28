@@ -232,7 +232,7 @@ class Transformer:
         # Ordenar o DataFrame por rodovia, faixa e posição
         df_analysis = self.df_base.orderBy("road_name", "car_lane", "car_length")
 
-        # Criar colunas para a posição e velocidade do carro da frente
+        # Criar colunas para a posição e velocidade do carro anterior
         df_analysis = df_analysis.withColumn("prev_length", lag("car_length").over(
             Window.partitionBy("road_name", "car_lane").orderBy("car_length")
         ))
