@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM apache/spark-py:latest
 
 WORKDIR /home/eborn/Documentos/CompEscalavelA2
 
@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD [ "python", "./simulator.py" ]
+CMD [ "python", "./python_to_db.py" ]
