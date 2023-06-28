@@ -26,7 +26,7 @@ class Subscriber:
                         print(message)
                     data = message['data'].split(",")
                     key = f"{data[0]} {data[2]}"
-                    value = f"{data[1]} {data[3]} {data[4]}"
+                    value = f"{data[1]} {data[3]} {data[4]} {data[5]} {data[6]}"
                     self.redis.set(key, value)
                     n -= 1
                     if (bar-n)%(n+1/100)<2:

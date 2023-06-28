@@ -63,7 +63,7 @@ class Transformer:
         redis_client = redis.Redis(
             host='localhost',
             port=6379,
-            db=1,
+            db=0,
             decode_responses = True,
         )
 
@@ -96,14 +96,19 @@ class Transformer:
         road = split(self.df['value'], ' ').getItem(0)
         lane = split(self.df['value'], ' ').getItem(1).cast('int')
         length = split(self.df['value'], ' ').getItem(2).cast('int')
+        road_length = split(self.df['value'], ' ').getItem(3).cast('int')
+        speed_limit = split(self.df['value'], ' ').getItem(4).cast('int')
 
         self.df = self.df.withColumn('time', time) \
             .withColumn('car_plate', plate) \
             .withColumn('road_name', road) \
             .withColumn('car_lane', lane) \
             .withColumn('car_length', length) \
+            .withColumn('road_length', road_length) \
+            .withColumn('speed_limit', speed_limit) \
             .drop('key') \
             .drop('value')
+            
         
         self.base_transform()
 
@@ -134,7 +139,7 @@ class Transformer:
         )
 
         # Calculates the change of lane
-        df = df.select("time", "road_name", "car_lane", "car_length", "car_plate", "acceleration", "speed", (col("car_lane") == col("prev_lane")).alias("lane_change"))
+        df = df.select("time", "road_name", "car_lane", "car_length", "car_plate", "acceleration", "speed", "road_length", "speed_limit", (col("car_lane") == col("prev_lane")).alias("lane_change"))
 
         # Joins the dataframes and save it to class variable
         self.df_base = df
@@ -165,7 +170,7 @@ class Transformer:
         self.dashboard_db.set("n_roads", self.distinct_road_names_count)
         
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_n_roads", min_time)
 
 
@@ -178,7 +183,7 @@ class Transformer:
         self.dashboard_db.set("n_cars", self.distinct_car_names_count)
         
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_n_cars", min_time)
 
 
@@ -190,7 +195,7 @@ class Transformer:
         self.dashboard_db.set("n_collisions_risk", self.number_of_cars_in_risk_of_collision)
         
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_n_collisions_risk", min_time)
         
         
@@ -203,15 +208,14 @@ class Transformer:
         self.dashboard_db.set("n_over_speed", self.number_of_cars_above_speed_limit)
         
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_n_over_speed", min_time)
         
 
     def add_analysis5(self):
         # lista veiculos acima limite velocidade
-        # Get cars above speed limit
-        joined_df = self.df_base.join(self.roads_data, 'road_name', "inner")
-        cars_above_speed_limit = joined_df.filter(col("speed") > col("speed_limit"))
+        # Filtra os carros acima do limite de velocidade
+        cars_above_speed_limit = self.df_base.filter(col("speed") > col("speed_limit"))
 
         # Agrupa os dados pelo par único de 'car_plate' e 'road_name' e seleciona a primeira linha de cada grupo
         unique_cars = cars_above_speed_limit.dropDuplicates(['car_plate', 'road_name']).select("time","road_name", "car_plate", "speed", "speed_limit")
@@ -219,11 +223,12 @@ class Transformer:
         self.cars_above_speed_limit = unique_cars
         
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_list_over_speed", min_time)
         
         # Envia os dados para o redis
         self.send_to_redis("list_over_speed", unique_cars)
+        
 
     def add_analysis6(self):
         # lista veiculos risco de colisao
@@ -250,7 +255,7 @@ class Transformer:
         self.cars_in_risk_of_collision = df_analysis
 
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_list_collisions_risk", min_time)
         
         # Envia os dados para o dashboard
@@ -263,7 +268,7 @@ class Transformer:
         print("Finished analysis 8")
         self.add_analysis9()
         print("Finished analysis 9")
-        self.add_analysis10()
+        # self.add_analysis10()
         print("Finished analysis 10")
 
     def add_analysis7(self):
@@ -274,7 +279,7 @@ class Transformer:
         df_top = df_top.limit(100)
     
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_top_100", min_time)
         
         # Envia os dados para o dashboard
@@ -288,13 +293,10 @@ class Transformer:
         # T = 1687802414.381332 - delta_T # testes
 
         # Consulta inicial para selecionar os dados em (time - T)
-        df_filtered = self.df_base.select("time", "road_name", "car_plate", "speed").filter(col("time") >= T)
-
-        # Faz join entre as duas tabelas
-        joined_df = df_filtered.join(self.roads_data.select("road_name", "speed_limit"), 'road_name', "inner")
+        df_filtered = self.df_base.select("time", "road_name", "car_plate", "speed", "speed_limit").filter(col("time") >= T)
 
         # Calcula os carros acima do limite de velocidade (1 para sim e 0 para não)
-        df_speeding = joined_df.withColumn("is_speeding", when(col("speed") > col("speed_limit"), 1).otherwise(0))
+        df_speeding = df_filtered.withColumn("is_speeding", when(col("speed") > col("speed_limit"), 1).otherwise(0))
 
         # Utiliza ordenação e lag para verificar se o carro está acima da velocidade sequencialmente
         df_speeding = df_speeding.withColumn("prev_speed", lag(col("is_speeding")).over(Window.partitionBy("car_plate").orderBy("time")))
@@ -310,23 +312,24 @@ class Transformer:
         df_final_result = df_count_speeding.filter(col("count_speeding") >= 10)
 
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_list_banned_cars", min_time)
         
         # Envia os dados para o dashboard
         self.send_to_redis("list_banned_cars", df_final_result)
+        
 
     def add_analysis9(self):
         # estatistica de cada rodovia
-        df_complete = self.df_base.join(self.roads_data, "road_name")
-        self.road_stats = df_complete.groupBy("road_name", "time").agg(
+        df = self.df_base.select("road_name", "time", "speed", "road_length")
+        self.road_stats = df.groupBy("road_name", "time").agg(
             avg("speed").alias("mean_speed"),
-            count(when(df_complete["speed"] == 0, True)).alias("n_accidents"),
-            (avg("length") / avg("speed")).alias("avg_traversal_time")
+            count(when(df["speed"] == 0, True)).alias("n_accidents"),
+            (avg("road_length") / avg("speed")).alias("avg_traversal_time")
         )
         
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_list_roads", min_time)
         
         # Envia os dados para o dashboard
@@ -341,14 +344,14 @@ class Transformer:
         i = 100
         n = 6
 
+        # Define o intervalo de tempo i
+        risk_i_window = Window.partitionBy('car_plate').orderBy('time')#.rangeBetween(-i, -1)
+        
         # Cria a coluna contadora de risco
         df = self.df_base.withColumn('risk_counter', when(col('speed') > safe_speed, 1).otherwise(0) +
             when(col('acceleration') > safe_acc, 1).otherwise(0) +
             when((col('lane_change') == 1) & (lag('lane_change').over(risk_i_window) == 1), 1).otherwise(0)
         )
-
-        # Define o intervalo de tempo i
-        risk_i_window = Window.partitionBy('car_plate').orderBy('time').rangeBetween(-i, -1)
 
         # Define o perido de tempo t
         dangerous_driving_window = Window.partitionBy('car_plate').orderBy('time').rangeBetween(-t, -1)
@@ -357,13 +360,10 @@ class Transformer:
         df = df.withColumn('risk_i', spark_sum('risk_counter').over(risk_i_window))
 
         # Calcula a coluna de direcao perigosa
-        df = df.withColumn('dangerous_driving', when(col('risk_i') >= n, True).otherwise(False)).over(dangerous_driving_window)
-
-        # Show the resulting DataFrame
-        df.show()
+        df = df.withColumn('dangerous_driving', when(col('risk_i') >= n, True).otherwise(False).over(dangerous_driving_window))
         
         # Coleta o tempo gasto e envia para o dashboard
-        min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]
+        min_time = self.df.select("time").agg({"time": "max"}).collect()[0][0]
         self.dashboard_db.set("time_list_dangerous_cars", min_time)
         
         # Envia os dados para o dashboard
@@ -371,9 +371,11 @@ class Transformer:
 
 if __name__ == "__main__":
     t = Transformer()
-    if t.get_df() == 0:
-        print("No data to transform")
-    else:
-        t.base_transform()
-        t.individual_analysis(True)
-        t.historical_analysis(True)
+    while True:
+        if t.get_df() == 0:
+            print("No data to transform")
+        else:
+            # t.base_transform()
+            # t.individual_analysis()
+            # t.historical_analysis()
+            t.add_analysis10()
