@@ -134,10 +134,10 @@ class Transformer:
     def individual_analysis(self):
         self.add_analysis1()
         self.add_analysis2()
-        self.add_analysis3()
-        self.add_analysis4()
         self.add_analysis5()
         self.add_analysis6()
+        self.add_analysis3()
+        self.add_analysis4()
 
 
     def add_analysis1(self):
