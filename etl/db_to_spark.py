@@ -144,17 +144,17 @@ class Transformer:
 
     def individual_analysis(self, print_data=False):
         self.add_analysis1()
-        print("Analysis 1 done")
+        print("Finished analysis 1")
         self.add_analysis2()
-        print("Analysis 2 done")
+        print("Finished analysis 2")
         self.add_analysis5()
-        print("Analysis 5 done")
+        print("Finished analysis 5")
         self.add_analysis6()
-        print("Analysis 6 done")
+        print("Finished analysis 6")
         self.add_analysis3()
-        print("Analysis 3 done")
+        print("Finished analysis 3")
         self.add_analysis4()
-        print("Analysis 4 done")
+        print("Finished analysis 4")
 
 
     def add_analysis1(self):
@@ -258,11 +258,13 @@ class Transformer:
 
     def historical_analysis(self, print_results=False):
         self.add_analysis7()
-        print("Análise 7 finalizada")
+        print("Finished analysis 7")
         self.add_analysis8()
-        print("Análise 8 finalizada")
+        print("Finished analysis 8")
         self.add_analysis9()
-        print("Análise 9 finalizada")
+        print("Finished analysis 9")
+        self.add_analysis10()
+        print("Finished analysis 10")
 
     def add_analysis7(self):
         # ranking top 100 veiculos
@@ -332,29 +334,33 @@ class Transformer:
 
 
     def add_analysis10(self):
-        # Define the safety variables
+        # Define as variaveis de seguranca
         safe_speed = 100
         safe_acc = 100
-        t = 1000
+        t = 10000
+        i = 100
         n = 6
 
-        # Define the conditions for risk events
-        speed_condition = col("speed") > safe_speed
-        acceleration_condition = col("acceleration") > safe_acc
-        lane_change_condition = (col("lane_change") == True) & (lag(col("lane_change")).over(
-            Window.partitionBy("car_plate").orderBy("time")) == True
+        # Cria a coluna contadora de risco
+        df = self.df_base.withColumn('risk_counter', when(col('speed') > safe_speed, 1).otherwise(0) +
+            when(col('acceleration') > safe_acc, 1).otherwise(0) +
+            when((col('lane_change') == 1) & (lag('lane_change').over(risk_i_window) == 1), 1).otherwise(0)
         )
 
-        # Create the "risk_counter" column
-        df_risk = self.df_base.withColumn("risk_counter", when(speed_condition, 1).otherwise(0)
-                                    + when(acceleration_condition, 1).otherwise(0)
-                                    + when(lane_change_condition, 1).otherwise(0)
-        )
+        # Define o intervalo de tempo i
+        risk_i_window = Window.partitionBy('car_plate').orderBy('time').rangeBetween(-i, -1)
 
-        # Calculate the "dangerous_driving" column based on the "risk_count" column
-        self.df_risk = df_risk.withColumn("dangerous_driving", when(spark_sum(col("risk_counter")).over(
-            Window.partitionBy("car_plate").orderBy("time").rowsBetween(Window.currentRow - t, Window.currentRow - 1)
-        ) >= n, True).otherwise(False))
+        # Define o perido de tempo t
+        dangerous_driving_window = Window.partitionBy('car_plate').orderBy('time').rangeBetween(-t, -1)
+
+        # Calcula a coluna de risco sobre o intervalo
+        df = df.withColumn('risk_i', spark_sum('risk_counter').over(risk_i_window))
+
+        # Calcula a coluna de direcao perigosa
+        df = df.withColumn('dangerous_driving', when(col('risk_i') >= n, True).otherwise(False)).over(dangerous_driving_window)
+
+        # Show the resulting DataFrame
+        df.show()
         
         # Coleta o tempo gasto e envia para o dashboard
         min_time = self.df.select("time").agg({"time": "min"}).collect()[0][0]

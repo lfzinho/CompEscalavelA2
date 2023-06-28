@@ -9,7 +9,7 @@ from io import StringIO
 import string 
 
 # ===== Constants =====
-DEBUG = True
+DEBUG = False
 HIST_LIMIT = 1024
 
 # ===== Data =====
@@ -53,7 +53,7 @@ def get_n_roads():
         result = r.get('n_roads')
         time_event = r.get('time_n_roads')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event = float(time_event)
     return (time_event, result)
 
 def get_n_cars(): 
@@ -66,7 +66,7 @@ def get_n_cars():
         result = r.get('n_cars')
         time_event = r.get('time_n_cars')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event =float(time_event)
     update_hist(hist_n_cars, time_event, result)
     return (time_event, result)
 
@@ -80,7 +80,7 @@ def get_n_over_speed():
         result = r.get('n_over_speed')
         time_event = r.get('time_n_over_speed')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event =float(time_event)
     update_hist(hist_n_over_speed, time_event, result)
     return (time_event, result)
 
@@ -94,7 +94,7 @@ def get_n_collisions_risk():
         result = r.get('n_collisions_risk')
         time_event = r.get('time_n_collisions_risk')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event = float(time_event)
     update_hist(hist_n_collisions_risk, time_event, result)
     return (time_event, result)
 
@@ -122,7 +122,7 @@ def get_list_over_speed():
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_over_speed')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event = float(time_event)
     return (time_event, result)
 
 def get_list_collisions_risk():
@@ -146,7 +146,7 @@ def get_list_collisions_risk():
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_collisions_risk')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event = float(time_event)
     return (time_event, result)
 
 def get_list_banned_cars():
@@ -170,7 +170,7 @@ def get_list_banned_cars():
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_banned_cars')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event = float(time_event)
     return (time_event, result)
 
 def get_list_dangerous_cars():
@@ -194,7 +194,7 @@ def get_list_dangerous_cars():
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_dangerous_cars')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event = float(time_event)
     return (time_event, result)
 
 def get_top_100():
@@ -221,7 +221,7 @@ def get_top_100():
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_top_100')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event = float(time_event)
     return (time_event, result)
 
 def get_list_roads():
@@ -248,7 +248,7 @@ def get_list_roads():
         result = pd.read_csv(StringIO(result))
         time_event = r.get('time_list_roads')
         if time_event is not None:
-            time_event = int(time_event)
+            time_event = float(time_event)
     return (time_event, result)
 
 # ===== Graphs =====
