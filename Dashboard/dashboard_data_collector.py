@@ -9,8 +9,8 @@ from io import StringIO
 import string 
 
 # ===== Constants =====
-DEBUG = False
-HIST_LIMIT = 2048
+DEBUG = True
+HIST_LIMIT = 1024
 
 # ===== Data =====
 hist_n_cars = []
@@ -19,12 +19,15 @@ hist_n_collisions_risk = []
 
 # ===== Redis =====
 r = redis.Redis(
-    host='10.22.160.187',
-    port=6381,
-    password='1234',
+    host='localhost',
+    port=6379,
     db=3,
     decode_responses = True
 )
+
+# ===== Setters =====
+def set_simulator_n_roads(n_roads: int):
+    r.set('simulator_n_roads', n_roads)
 
 # ===== Getters =====
 def update_hist(hist: list, time: int, new_val: int):
@@ -94,7 +97,6 @@ def get_n_collisions_risk():
             time_event = int(time_event)
     update_hist(hist_n_collisions_risk, time_event, result)
     return (time_event, result)
-
 
 def get_list_over_speed():
     result = ""
@@ -170,7 +172,6 @@ def get_list_banned_cars():
         if time_event is not None:
             time_event = int(time_event)
     return (time_event, result)
-
 
 def get_list_dangerous_cars():
     result = ""
@@ -249,7 +250,6 @@ def get_list_roads():
         if time_event is not None:
             time_event = int(time_event)
     return (time_event, result)
-
 
 # ===== Graphs =====
 
