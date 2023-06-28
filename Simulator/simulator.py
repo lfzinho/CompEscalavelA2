@@ -514,10 +514,6 @@ class World:
             process = self.processes[road.name]
             process.join()
 
-    def delete_roads(self):
-        for r in self.roads:
-            r.set_flag(False)
-
     def main(self):
         self.create_all_roads()
         self.create_processes()
@@ -527,9 +523,6 @@ class World:
         try:
             while True:
                 new_n_roads = int(self.road_number_getter.get_number_roads())
-                if new_n_roads<self.created_roads:
-                    self.n_roads = new_n_roads
-                    self.delete_roads()
                 if new_n_roads>self.created_roads:
                     self.n_roads = new_n_roads
                     self.create_all_roads()
@@ -537,7 +530,6 @@ class World:
                     self.start_processes()
                 time.sleep(5)
         except KeyboardInterrupt:
-            self.delete_roads()
             self.join_processes()
             # for road in self.roads:
             #     self.processes[road.name].stop()
