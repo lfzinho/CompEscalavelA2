@@ -51,9 +51,8 @@ class Transformer:
     def read_data_from_redis(self):
         # connects to redis
         redis_client = redis.Redis(
-            host='172.23.66.246',
-            port=1111,
-            password='1234',
+            host='localhost',
+            port=6379,
             db=1,
             decode_responses = True,
         )
@@ -66,6 +65,7 @@ class Transformer:
             value = redis_client.get(key)
             data.append((key, value))
 
+        print(f"Read {len(data)} data from redis")
         return data
 
     def get_df(self):
@@ -74,7 +74,7 @@ class Transformer:
 
         # if there is no data, return None
         if len(data) == 0:
-            return None
+            return 0
 
         # create a spark dataframe with coumns key and value 
         self.df = self.spark.createDataFrame(data, ['key', 'value'])
@@ -127,6 +127,8 @@ class Transformer:
         self.df_base = df.join(speeds, "time", "outer") \
             .join(accs, "time", "outer") \
             .join(lane_changes, "time", "outer")
+        
+        print("Base transform done")
 
 
     def individual_analysis(self):
@@ -337,12 +339,11 @@ class Transformer:
         # Envia os dados para o dashboard
         self.send_to_redis("list_dangerous_cars", self.df_risk)
 
-# quit()
-t = Transformer()
-if t.get_df() is None:
-    # Sem dados no banco
-    pass
-else:
-    t.add_analysis1()
-    t.add_analysis2()
-    t.base_transform()
+if __name__ == "__main__":
+    t = Transformer()
+    if t.get_df() == 0:
+        print("No data to transform")
+    else:
+        t.base_transform()
+        t.individual_analysis()
+        t.historical_analysis()

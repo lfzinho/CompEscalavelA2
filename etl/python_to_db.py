@@ -6,9 +6,8 @@ class Subscriber:
     def __init__(self):
         self.debug = True
         self.redis = redis.Redis(
-            host='10.22.160.187',
-            port=6381,
-            password='1234',
+            host='localhost',
+            port=6379,
             db=1,
             decode_responses = True,
         )
