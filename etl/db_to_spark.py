@@ -66,6 +66,7 @@ class Transformer:
         self.dashboard_db.set(data_name, csv_string)
 
     def read_data_from_redis(self):
+        self.time_before_read_data = time.time()
         # connects to redis
         redis_client = redis.Redis(
             host='redis',
@@ -158,7 +159,10 @@ class Transformer:
         df = df.withColumn("row_number", row_number().over(window_spec))
 
         # Filtra o DataFrame para obter apenas as leituras mais recentes de cada carro
-        self.df_base_curr = df.filter(col("row_number") == 1).drop("row_number")
+        df = df.filter(col("row_number") == 1).drop("row_number")
+        
+        # Remove os carros que não enviam dados há mais de 1 minuto
+        self.df_base_curr = df.filter(col("time") > (self.time_before_read_data - 60))
         
 
 
