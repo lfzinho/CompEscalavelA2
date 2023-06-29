@@ -35,16 +35,11 @@ class Transformer:
         # Get roads' data
         self.roads_data = self.spark.createDataFrame(pandas_df)
         self.dashboard_db = redis.Redis(
-            host='compescalavel-redis',
+            host='localhost',
             port=6379,
             db=1,
             decode_responses = True,
         )    
-        # try connecting to redis
-        try:
-            self.redis.ping()
-        except:
-            self.redis = redis.Redis(host="localhost", port=6379, db=3, decode_responses=True) 
 
 
         self.fined_cars = {}
@@ -69,7 +64,7 @@ class Transformer:
         self.time_before_read_data = time.time()
         # connects to redis
         redis_client = redis.Redis(
-            host='redis',
+            host='localhost',
             port=6379,
             db=0,
             decode_responses = True,
@@ -190,7 +185,7 @@ class Transformer:
         
         # Coleta o tempo gasto e envia para o dashboard
         min_time = self.df_base_curr.select("time").agg({"time": "max"}).collect()[0][0]
-        self.dashboard_db.set("time_n_roads", min_time)
+        if min_time is not None: self.dashboard_db.set("time_n_roads", min_time)
 
 
     def add_analysis2(self):
