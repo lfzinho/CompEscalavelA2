@@ -136,7 +136,7 @@ app.layout = html.Div([
                         id='table_over_speed',
                         columns = [{"name": 'Placa', 'id': 'car_plate'},
                                     {"name": 'Velocidade', 'id': 'speed'},
-                                    {"name": 'Risco de colisão', 'id': 'colision_risk'}],
+                                    {"name": 'Risco de colisão', 'id': 'collision_risk'}],
                         data=[],
                         style_cell={'textAlign': 'center'},
                         style_header={
@@ -148,7 +148,8 @@ app.layout = html.Div([
                                 'if': {'row_index': 'odd'},
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
-                        ]
+                        ],
+                        page_size= 20
                     ),
                     dcc.Interval(
                     id='interval-ListSpeed',
@@ -183,7 +184,8 @@ app.layout = html.Div([
                                 'if': {'row_index': 'odd'},
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
-                        ]
+                        ],
+                        page_size= 20
                     ),
 
                     dcc.Interval(
@@ -219,7 +221,8 @@ app.layout = html.Div([
                                 'if': {'row_index': 'odd'},
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
-                        ]
+                        ],
+                        page_size= 20
                     ),
 
                     dcc.Interval(
@@ -253,7 +256,8 @@ app.layout = html.Div([
                                 'if': {'row_index': 'odd'},
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
-                        ]
+                        ],
+                        page_size= 20
                     ),
 
                     dcc.Interval(
@@ -329,7 +333,8 @@ app.layout = html.Div([
                                 'if': {'row_index': 'odd'},
                                 'backgroundColor': 'rgb(248, 248, 248)'
                             }
-                        ]
+                        ],
+                        page_size= 20
                     ),
 
                     dcc.Interval(

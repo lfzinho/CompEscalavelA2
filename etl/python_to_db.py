@@ -17,7 +17,7 @@ class Subscriber:
         except:
             self.redis = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
         
-        self.redis.flushdb()
+        # self.redis.flushdb()
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe("veiculo")
 

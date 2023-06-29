@@ -108,7 +108,7 @@ def get_list_over_speed():
         riscos_colisao = [random.randint(0, 1) for _ in range(len(placas))]
 
         # Construindo a string de dados
-        result = "car_plate,speed,colision_risk\n"
+        result = "car_plate,speed,collision_risk\n"
         for placa, velocidade, risco in zip(placas, velocidades, riscos_colisao):
             result += f"{placa},{velocidade},{risco}\n"
 
