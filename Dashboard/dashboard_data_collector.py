@@ -108,7 +108,7 @@ def get_list_over_speed():
         riscos_colisao = [random.randint(0, 1) for _ in range(len(placas))]
 
         # Construindo a string de dados
-        result = "Placa,Velocidade,Risco de colisão\n"
+        result = "car_plate,speed,colision_risk\n"
         for placa, velocidade, risco in zip(placas, velocidades, riscos_colisao):
             result += f"{placa},{velocidade},{risco}\n"
 
@@ -135,7 +135,7 @@ def get_list_collisions_risk():
         velocidades = [random.randint(80, 120) for _ in range(len(placas))]
 
         # Construindo a string de dados
-        result = "Placa,Velocidade\n"
+        result = "car_plate,speed\n"
         for placa, velocidade in zip(placas, velocidades):
             result += f"{placa},{velocidade}\n"
 
@@ -160,7 +160,7 @@ def get_list_banned_cars():
         placas = ['ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456']
 
         # Construindo a string de dados
-        result = "Placa\n"
+        result = "car_plate\n"
         for placa in placas:
             result += f"{placa}\n"
 
@@ -185,7 +185,7 @@ def get_list_dangerous_cars():
         placas = ['ABC-1234', 'DEF-5678', 'GHI-9012', 'JKL-3456']
 
         # Construindo a string de dados
-        result = "Placa\n"
+        result = "car_plate\n"
         for placa in placas:
             result += f"{placa}\n"
 
@@ -213,7 +213,7 @@ def get_top_100():
         n_rodovias = [random.randint(1, 10) for _ in range(len(placas))]
 
         # Construindo a string de dados
-        result = "Placa,Número de rodovias\n"
+        result = "car_plate,n_roads\n"
         for placa, n_rodovia in zip(placas, n_rodovias):
             result += f"{placa},{n_rodovia}\n"
 
@@ -240,7 +240,7 @@ def get_list_roads():
         accidents = [random.randint(1, 10) for _ in range(len(rodovias))]
 
         # Construindo a string de dados
-        result = "Rodovia,Velocidade média dos carros,Tempo médio de travessia,Número de acidentes\n"
+        result = "road_name,mean_speed,avg_traversal_time,n_accidents\n"
         for rodovia, mean_speed, mean_cross, accident in zip(rodovias, mean_speeds, mean_crossing, accidents):
             result += f"{rodovia},{mean_speed},{mean_cross},{accident}\n"
 
