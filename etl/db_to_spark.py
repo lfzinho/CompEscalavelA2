@@ -299,7 +299,7 @@ class Transformer:
         if print_log: print("Finished analysis 8")
         self.add_analysis9()
         if print_log: print("Finished analysis 9")
-        # self.add_analysis10()
+        self.add_analysis10()
         if print_log: print("Finished analysis 10")
 
     def add_analysis7(self):
